@@ -16,9 +16,21 @@ struct index_of<T, T, Ts...> {
 
 template<typename T, typename U, typename... Ts>
 struct index_of<T, U, Ts...> {
-
 	static constexpr size_t value = 1 + index_of<T, Ts...>::value;
 };
+
+template<size_t pos, typename... Ts> struct type_at;
+
+template<typename T, typename... Ts>
+struct type_at<0, T, Ts...> {
+	using type = T;
+};
+
+template<size_t pos, typename T, typename... Ts>
+struct type_at<pos, T, Ts...> {
+	using type = typename type_at<pos - 1, Ts...>::type;
+};
+
 }
 
 template<typename B> struct placeholder {
@@ -54,6 +66,13 @@ private:
 	}
 
 public:
+	template<size_t pos>
+	static constexpr auto safe_type_at()
+	{
+		static_assert(pos < sizeof...(Ts), "requested type at index out of bounds");
+		return placeholder<typename details::type_at<pos, Ts...>::type>{};
+	}
+
 	static constexpr size_t size = sizeof...(Ts);
 
 	template<typename T>
@@ -63,6 +82,9 @@ public:
 	static constexpr size_t index_of = safe_index_of<T>();
 
 	static constexpr bool is_unique = decltype((type_set{} + ... + base<Ts>{}))::size == size;
+
+	template<size_t pos>
+	using at = typename decltype(safe_type_at<pos>())::type;
 
 	template<template<typename...> class F>
 	static constexpr auto for_each()

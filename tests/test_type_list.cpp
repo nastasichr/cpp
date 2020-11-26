@@ -59,6 +59,14 @@ TEST(type_list_is_unique)
 	static_assert(list4::is_unique == true, "");
 }
 
+TEST(type_list_at)
+{
+	static_assert(std::is_same<list1::at<0>, double>::value, "");
+	static_assert(std::is_same<list2::at<0>, int>::value, "");
+	static_assert(std::is_same<list3::at<1>, abstract>::value, "");
+	static_assert(std::is_same<list4::at<3>, long long>::value, "");
+}
+
 enum {
 	GENERIC_MATCH,
 	LIST0_MATCH,
