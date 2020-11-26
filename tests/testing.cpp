@@ -1,9 +1,11 @@
 #include "testing.h"
 #include <type_traits>
 
-std::map<std::string, void(*)()>* TestRegistry::reg = nullptr;
+namespace test {
 
-TestRegistry::TestRegistry(const std::string& name, void(*test)())
+std::map<std::string, void(*)()>* registry::reg = nullptr;
+
+registry::registry(const std::string& name, void(*test)())
 {
 	if (!reg) {
 		reg = new std::remove_reference<decltype(*reg)>::type;
@@ -11,13 +13,13 @@ TestRegistry::TestRegistry(const std::string& name, void(*test)())
 	(*reg)[name] = test;
 }
 
-bool TestRegistry::run_all()
+bool registry::run_all()
 {
 	if (!reg) {
 		return true;
 	}
 	bool has_failed = false;
-	for (auto& item : *TestRegistry::reg) {
+	for (auto& item : *registry::reg) {
 		std::cout << "--> Running test " << item.first << std::endl;
 		try {
 			item.second();
@@ -28,4 +30,6 @@ bool TestRegistry::run_all()
 		}
 	}
 	return !has_failed;
+}
+
 }
