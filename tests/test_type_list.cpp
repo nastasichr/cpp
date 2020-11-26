@@ -118,6 +118,13 @@ TEST(type_list_passes_types_to_lambda_with_for_each)
 	static_assert(list2::for_each([](auto...t) { return sizeof...(t) == 2; }), "");
 	static_assert(list3::for_each([](auto...t) { return sizeof...(t) == 3; }), "");
 	static_assert(list4::for_each([](auto...t) { return sizeof...(t) == 4; }), "");
+
+	using namespace std::string_literals;
+	list3::for_each([](auto...t) {
+		std::cout << "Number of types = " << sizeof...(t) << std::endl;
+		std::cout << "Positions = " << ((" "s + std::to_string(list3::index_of<typename decltype(t)::type>)) + ...) << std::endl;
+		std::cout << "Sizes = " << ((" "s + std::to_string(sizeof(typename decltype(t)::type))) + ...) << std::endl;
+	});
 }
 
 int main()
