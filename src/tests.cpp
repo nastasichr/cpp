@@ -1,22 +1,5 @@
 #include "type_list.h"
-
-#include <iostream>
-#include <string>
-#include <map>
-
-struct TestRegistry {
-	static std::map<std::string, void(*)()> reg;
-
-	TestRegistry(const std::string& name, void(*test)())
-	{
-		reg[name] = test;
-	}
-};
-std::map<std::string, void(*)()> TestRegistry::reg;
-
-#define TEST(t) void t(); static TestRegistry ___reg_##t{#t, &t}; void t()
-
-#define PRINT(exp) #exp << " = " << (exp)
+#include "testing.h"
 
 using List0 = meta::TypeList<>;
 using List1 = meta::TypeList<double>;
@@ -73,10 +56,5 @@ TEST(TypeList_is_unique)
 
 int main()
 {
-	for (auto& item : TestRegistry::reg) {
-		std::cout << "Running test " << item.first << std::endl;
-		item.second();
-	}
-
-	return 0;
+	return TestRegistry::run_all() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
