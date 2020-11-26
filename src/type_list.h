@@ -21,7 +21,7 @@ struct index_of<T, U, Ts...> {
 };
 }
 
-template<typename B> struct TypeHolder {
+template<typename B> struct placeholder {
 	using type = B;
 };
 
@@ -65,15 +65,15 @@ public:
 	static constexpr bool is_unique = decltype((type_set{} + ... + base<Ts>{}))::size == size;
 
 	template<template<typename...> class F>
-	static auto for_each()
+	static constexpr auto for_each()
 	{
-		 return F<Ts...>::f();
+		 return F<Ts...>::process();
 	}
 
 	template<class F>
-	static auto for_each_alt(F&& f)
+	static constexpr auto for_each(F&& f)
 	{
-		return f(TypeHolder<Ts>{}...);
+		return f(placeholder<Ts>{}...);
 	}
 };
 

@@ -59,6 +59,59 @@ TEST(type_list_is_unique)
 	static_assert(list4::is_unique == true, "");
 }
 
+enum {
+	GENERIC_MATCH,
+	LIST0_MATCH,
+	LIST1_MATCH,
+	LIST2_MATCH,
+	LIST3_MATCH,
+	LIST4_MATCH,
+};
+
+template<typename...T>
+struct operation {
+	static /*constexpr*/ int process() { return GENERIC_MATCH; }
+};
+
+template<>
+struct operation<> {
+	static constexpr int process() { return LIST0_MATCH; }
+};
+
+template<>
+struct operation<double> {
+	static constexpr int process() { return LIST1_MATCH; }
+};
+
+template<>
+struct operation<int, int> {
+	static constexpr int process() { return LIST2_MATCH; }
+};
+
+template<>
+struct operation<int, abstract, int> {
+	static constexpr int process() { return LIST3_MATCH; }
+};
+
+TEST(type_list_passes_types_to_operation_with_for_each)
+{
+	static_assert(list0::for_each<operation>() == LIST0_MATCH, "");
+	static_assert(list1::for_each<operation>() == LIST1_MATCH, "");
+	static_assert(list2::for_each<operation>() == LIST2_MATCH, "");
+	static_assert(list3::for_each<operation>() == LIST3_MATCH, "");
+	// This is not static_assert because the generic version is not constexpr
+	ASSERT(list4::for_each<operation>() == GENERIC_MATCH);
+}
+
+TEST(type_list_passes_types_to_lambda_with_for_each)
+{
+	static_assert(list0::for_each([](auto...t) { return sizeof...(t) == 0; }), "");
+	static_assert(list1::for_each([](auto...t) { return sizeof...(t) == 1; }), "");
+	static_assert(list2::for_each([](auto...t) { return sizeof...(t) == 2; }), "");
+	static_assert(list3::for_each([](auto...t) { return sizeof...(t) == 3; }), "");
+	static_assert(list4::for_each([](auto...t) { return sizeof...(t) == 4; }), "");
+}
+
 int main()
 {
 	std::cout << "===>> " __FILE__ << std::endl;
