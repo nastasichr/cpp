@@ -95,6 +95,12 @@ public:
 	template<class F>
 	static constexpr auto for_each(F&& f)
 	{
+		 return f.template operator()<Ts...>();
+	}
+
+	template<class F>
+	static constexpr auto for_each_as_args(F&& f)
+	{
 		return f(placeholder<Ts>{}...);
 	}
 };

@@ -1,6 +1,8 @@
 #include "type_list.h"
 #include "testing.h"
 
+using namespace std::string_literals;
+
 class abstract {
 	char fat[1024];
 	virtual ~abstract() = 0;
@@ -77,50 +79,77 @@ enum {
 };
 
 template<typename...T>
-struct operation {
+struct static_operation {
 	static /*constexpr*/ int process() { return GENERIC_MATCH; }
 };
 
 template<>
-struct operation<> {
+struct static_operation<> {
 	static constexpr int process() { return LIST0_MATCH; }
 };
 
 template<>
-struct operation<double> {
+struct static_operation<double> {
 	static constexpr int process() { return LIST1_MATCH; }
 };
 
 template<>
-struct operation<int, int> {
+struct static_operation<int, int> {
 	static constexpr int process() { return LIST2_MATCH; }
 };
 
 template<>
-struct operation<int, abstract, int> {
+struct static_operation<int, abstract, int> {
 	static constexpr int process() { return LIST3_MATCH; }
 };
 
-TEST(type_list_passes_types_to_operation_with_for_each)
+TEST(type_list_passes_types_to_static_operation_with_for_each)
 {
-	static_assert(list0::for_each<operation>() == LIST0_MATCH, "");
-	static_assert(list1::for_each<operation>() == LIST1_MATCH, "");
-	static_assert(list2::for_each<operation>() == LIST2_MATCH, "");
-	static_assert(list3::for_each<operation>() == LIST3_MATCH, "");
+	static_assert(list0::for_each<static_operation>() == LIST0_MATCH, "");
+	static_assert(list1::for_each<static_operation>() == LIST1_MATCH, "");
+	static_assert(list2::for_each<static_operation>() == LIST2_MATCH, "");
+	static_assert(list3::for_each<static_operation>() == LIST3_MATCH, "");
 	// This is not static_assert because the generic version is not constexpr
-	ASSERT(list4::for_each<operation>() == GENERIC_MATCH);
+	ASSERT(list4::for_each<static_operation>() == GENERIC_MATCH);
 }
 
-TEST(type_list_passes_types_to_lambda_with_for_each)
-{
-	static_assert(list0::for_each([](auto...t) { return sizeof...(t) == 0; }), "");
-	static_assert(list1::for_each([](auto...t) { return sizeof...(t) == 1; }), "");
-	static_assert(list2::for_each([](auto...t) { return sizeof...(t) == 2; }), "");
-	static_assert(list3::for_each([](auto...t) { return sizeof...(t) == 3; }), "");
-	static_assert(list4::for_each([](auto...t) { return sizeof...(t) == 4; }), "");
+struct operation {
+	template<typename...T>
+	constexpr int operator()() { return GENERIC_MATCH; }
+};
 
-	using namespace std::string_literals;
-	list3::for_each([](auto...t) {
+struct printer {
+	template<typename...T>
+	constexpr void operator()()
+	{
+		std::cout << "Number of types = " << sizeof...(T) << std::endl;
+		if constexpr (sizeof...(T) > 0) {
+		  std::cout << "Sizes = " << ((" "s + std::to_string(sizeof(T))) + ...) << std::endl;
+		}
+	}
+};
+
+TEST(type_list_passes_types_to_function_object_with_for_each)
+{
+	operation op{};
+	static_assert(list4::for_each(op) == GENERIC_MATCH, "");
+
+	list0::for_each(printer{});
+	list1::for_each(printer{});
+	list2::for_each(printer{});
+	list3::for_each(printer{});
+	list4::for_each(printer{});
+}
+
+TEST(type_list_passes_types_to_lambda_with_for_each_as_args)
+{
+	static_assert(list0::for_each_as_args([](auto...t) { return sizeof...(t) == 0; }), "");
+	static_assert(list1::for_each_as_args([](auto...t) { return sizeof...(t) == 1; }), "");
+	static_assert(list2::for_each_as_args([](auto...t) { return sizeof...(t) == 2; }), "");
+	static_assert(list3::for_each_as_args([](auto...t) { return sizeof...(t) == 3; }), "");
+	static_assert(list4::for_each_as_args([](auto...t) { return sizeof...(t) == 4; }), "");
+
+	list3::for_each_as_args([](auto...t) {
 		std::cout << "Number of types = " << sizeof...(t) << std::endl;
 		std::cout << "Positions = " << ((" "s + std::to_string(list3::index_of<typename decltype(t)::type>)) + ...) << std::endl;
 		std::cout << "Sizes = " << ((" "s + std::to_string(sizeof(typename decltype(t)::type))) + ...) << std::endl;
