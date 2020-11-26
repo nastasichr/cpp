@@ -116,6 +116,17 @@ TEST(type_list_passes_types_to_static_operation_with_for_each)
 struct operation {
 	template<typename...T>
 	constexpr int operator()() { return GENERIC_MATCH; }
+
+	template<typename...T>
+	constexpr auto some_function() { return nullptr; }
+};
+
+struct binder {
+	operation& op;
+	binder(operation& op) : op{op} {}
+
+	template<typename...T>
+	constexpr auto operator()() { return op.some_function<T...>(); }
 };
 
 struct printer {
@@ -132,7 +143,10 @@ struct printer {
 TEST(type_list_passes_types_to_function_object_with_for_each)
 {
 	operation op{};
+	// Dispatch to operator() -> function object
 	static_assert(list4::for_each(op) == GENERIC_MATCH, "");
+	// Dispatch to some_function() -> binder acts as a pseudo template lambda
+	static_assert(list4::for_each(binder{op}) == nullptr, "");
 
 	list0::for_each(printer{});
 	list1::for_each(printer{});
