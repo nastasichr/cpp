@@ -16,10 +16,22 @@ std::map<std::string, void(*)()> TestRegistry::reg;
 
 #define TEST(t) void t(); static TestRegistry ___reg_##t{#t, &t}; void t()
 
+#define PRINT(exp) #exp << " = " << (exp)
+
 using List0 = meta::TypeList<>;
 using List1 = meta::TypeList<double>;
 using List2 = meta::TypeList<int, int>;
 using List3 = meta::TypeList<int, TestRegistry, int>;
+using List4 = meta::TypeList<char, int, long, long long>;
+
+TEST(TypeList_runtime_occupancy)
+{
+	std::cout << PRINT(sizeof(List0)) << std::endl;
+	std::cout << PRINT(sizeof(List1)) << std::endl;
+	std::cout << PRINT(sizeof(List2)) << std::endl;
+	std::cout << PRINT(sizeof(List3)) << std::endl;
+	std::cout << PRINT(sizeof(List4)) << std::endl;
+}
 
 TEST(TypeList_size)
 {
@@ -39,6 +51,24 @@ TEST(TypeList_has_type)
 	static_assert(List3::has_type<int> == true, "");
 	static_assert(List3::has_type<double> == false, "");
 	static_assert(List3::has_type<TestRegistry> == true, "");
+}
+
+TEST(TypeList_index_of)
+{
+	// Should fail compilation: static_assert(List0::index_of<int> == 0, "");
+	static_assert(List1::index_of<double> == 0, "");
+	static_assert(List2::index_of<int> == 0, "");
+	static_assert(List3::index_of<int> == 0, "");
+	static_assert(List3::index_of<TestRegistry> == 1, "");
+}
+
+TEST(TypeList_is_unique)
+{
+	static_assert(List0::is_unique == true, "");
+	static_assert(List1::is_unique == true, "");
+	static_assert(List2::is_unique == false, "");
+	static_assert(List3::is_unique == false, "");
+	static_assert(List4::is_unique == true, "");
 }
 
 int main()
