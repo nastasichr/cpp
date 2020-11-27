@@ -16,11 +16,11 @@ using list4 = meta::type_list<char, int, long, long long>;
 
 TEST(type_list_runtime_occupancy)
 {
-	std::cout << PRINT(sizeof(list0)) << std::endl;
-	std::cout << PRINT(sizeof(list1)) << std::endl;
-	std::cout << PRINT(sizeof(list2)) << std::endl;
-	std::cout << PRINT(sizeof(list3)) << std::endl;
-	std::cout << PRINT(sizeof(list4)) << std::endl;
+	LOGGER << PRINT(sizeof(list0)) << std::endl;
+	LOGGER << PRINT(sizeof(list1)) << std::endl;
+	LOGGER << PRINT(sizeof(list2)) << std::endl;
+	LOGGER << PRINT(sizeof(list3)) << std::endl;
+	LOGGER << PRINT(sizeof(list4)) << std::endl;
 }
 
 TEST(type_list_size)
@@ -133,9 +133,9 @@ struct printer {
 	template<typename...T>
 	constexpr void operator()()
 	{
-		std::cout << "Number of types = " << sizeof...(T) << std::endl;
+		LOGGER << "Number of types = " << sizeof...(T) << std::endl;
 		if constexpr (sizeof...(T) > 0) {
-		  std::cout << "Sizes = " << ((" "s + std::to_string(sizeof(T))) + ...) << std::endl;
+		  LOGGER << "Sizes = " << ((" "s + std::to_string(sizeof(T))) + ...) << std::endl;
 		}
 	}
 };
@@ -164,14 +164,13 @@ TEST(type_list_passes_types_to_lambda_with_for_each_as_args)
 	static_assert(list4::for_each_as_args([](auto...t) { return sizeof...(t) == 4; }), "");
 
 	list3::for_each_as_args([](auto...t) {
-		std::cout << "Number of types = " << sizeof...(t) << std::endl;
-		std::cout << "Positions = " << ((" "s + std::to_string(list3::index_of<typename decltype(t)::type>)) + ...) << std::endl;
-		std::cout << "Sizes = " << ((" "s + std::to_string(sizeof(typename decltype(t)::type))) + ...) << std::endl;
+		LOGGER << "Number of types = " << sizeof...(t) << std::endl;
+		LOGGER << "Positions = " << ((" "s + std::to_string(list3::index_of<typename decltype(t)::type>)) + ...) << std::endl;
+		LOGGER << "Sizes = " << ((" "s + std::to_string(sizeof(typename decltype(t)::type))) + ...) << std::endl;
 	});
 }
 
 int main()
 {
-	std::cout << "===>> " __FILE__ << std::endl;
-	return test::registry::run_all() ? EXIT_SUCCESS : EXIT_FAILURE;
+	return test::registry::run_all("type_list") ? EXIT_SUCCESS : EXIT_FAILURE;
 }

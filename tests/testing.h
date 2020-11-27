@@ -8,7 +8,7 @@ namespace test {
 
 struct registry {
 	registry(const std::string& name, void(*function)());
-	static bool run_all();
+	static bool run_all(const std::string&);
 private:
 	static std::map<std::string, void(*)()>* reg;
 };
@@ -16,10 +16,11 @@ private:
 }
 
 #define TEST(t) void t(); static test::registry ___reg_##t{#t, &t}; void t()
+#define LOGGER (std::cout << "    ")
 #define PRINT(exp) #exp << " = " << (exp)
 #define ASSERT(exp) do { \
 	if (!(exp)) { \
-		std::cout << "Assertion failed: " #exp << std::endl;\
+		LOGGER << "Assertion failed: " #exp << std::endl;\
 		throw "";\
 	} \
 } while (0)

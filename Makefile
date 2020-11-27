@@ -8,7 +8,7 @@ TEST_SRCS := $(wildcard $(TEST_DIR)/test_*.cpp)
 TEST_OBJS := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(TEST_SRCS))
 TEST_DEPS := $(patsubst %.o, %.d, $(TEST_OBJS))
 TEST_BINS := $(patsubst %.cpp, $(OBJ_DIR)/%.bin, $(wildcard $(TEST_DIR)/test_*.cpp))
-TEST_RESS := $(patsubst %.bin, %.OK, $(TEST_BINS))
+TEST_RESS := $(patsubst %.bin, %.PASSED, $(TEST_BINS))
 
 SRCS := $(wildcard src/*.cpp)
 SRCS += $(filter-out $(TEST_SRCS), $(wildcard $(TEST_DIR)/*.cpp))
@@ -27,7 +27,7 @@ $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) -c $(CPPFLAGS) $(LDFLAGS) $< -o $@
 
-%.OK: %.bin
+%.PASSED: %.bin
 	./$< && touch $@
 
 %.bin: %.o $(OBJS)
@@ -35,6 +35,8 @@ $(OBJ_DIR)/%.o: %.cpp
 
 -include $(DEPS)
 -include $(TEST_DEPS)
+
+keep-alive-intermetiates: $(OBJS) $(TEST_OBJS) $(DEPS) $(TEST_DEPS) $(TEST_BINS)
 
 .PHONY: clean
 clean:

@@ -13,14 +13,17 @@ registry::registry(const std::string& name, void(*test)())
 	(*reg)[name] = test;
 }
 
-bool registry::run_all()
+bool registry::run_all(const std::string& message)
 {
 	if (!reg) {
 		return true;
 	}
+	std::cout << "========================================================" << std::endl;
+	std::cout << "Running tests " << message << std::endl;
+	std::cout << "========================================================" << std::endl;
 	bool has_failed = false;
 	for (auto& item : *registry::reg) {
-		std::cout << "--> Running test " << item.first << std::endl;
+		std::cout << "--> Test " << item.first << std::endl;
 		try {
 			item.second();
 			std::cout << "<-- Success " << std::endl;
