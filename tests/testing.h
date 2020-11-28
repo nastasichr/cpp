@@ -24,3 +24,5 @@ private:
 		throw "";\
 	} \
 } while (0)
+#define ASSERT_TYPE_EQ(t1, t2) \
+	static_assert(std::is_same<t1, t2>::value, "Types do not match")
