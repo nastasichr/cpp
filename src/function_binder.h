@@ -16,7 +16,7 @@ template<typename F, typename R, typename... Args>
 struct binder : callable<R, Args...> {
 	F target;
 	binder(F f) : target{f} {}
-	binder(F&& f) : target{f} {}
+	//binder(F&& f) : target{f} {}
 
 	R operator()(Args&&... args) override
 	{
@@ -43,6 +43,8 @@ template<typename...> struct function;
 template<class Storage, typename R, typename... Args>
 struct function<Storage, R(Args...)> {
 	Storage storage;
+
+	function() = default;
 
 	template<class F>
 	function(F&& f)
