@@ -123,7 +123,7 @@ struct operation {
 
 struct binder {
 	operation& op;
-	binder(operation& op) : op{op} {}
+	constexpr binder(operation& op) : op{op} {}
 
 	template<typename...T>
 	constexpr auto operator()() { return op.some_function<T...>(); }
