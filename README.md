@@ -5,9 +5,19 @@ This is a collection of experiments with C++ exploring topics such as
 Most of the code in here should be good for embedded systems, i.e,
 no exception, no RTTI, no dynamic memory, no std/boost containers.
 
+This project is not intended as a library, but it is rather my personal space to have fun with C++. Moreover, I think better implementation of the same or similar features can be found around. 
+
 The code is currently based on C++17.
 
-Try this on Gitpod [here](https://www.gitpod.io/#https://github.com/nastasichr/cpp).
+Build this project on Gitpod [here](https://www.gitpod.io/#https://github.com/nastasichr/cpp).
+
+## Content
+These are some helpers defined in this project that might come in handy:
+
+- `make_unique_id<T>` : Generate a unique ID from a type;
+- `type_list<T...>` : List of types with few useful meta-function, including a `for_each` to apply other ones;
+- `parse_function<F>` : Extracts return type and argument types, allowing for an (optional) external meta-function to be applied;
+- `sized_function<size, R(Args..)>` : alternative to std::function backed by fixed-size static storage;
 
 ### Disclaimer
 The code in here has been written based on my personal experiences with C++.
