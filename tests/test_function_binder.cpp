@@ -10,13 +10,17 @@ double f1() { return 1.0; }
 void   f2(int, double& d) { d = 2.0;}
 
 struct A {
-	//double m1()				{ return 1.1; }
-	//void   m2(int, double& d)		{ d = 2.2; }
-	//double c1() const			{ return 1.11; }
-	//void   c2(int, double& d) const		{ d = 2.22; }
 	static double s1()			{ return 1.111; }
 	static void   s2(int, double& d)	{ d = 2.222; }
 };
+
+TEST(size_of_types)
+{
+	LOGGER << PRINT(sizeof(container::details::callable<void>)) << std::endl;
+	LOGGER << PRINT(sizeof(container::details::binder<decltype(&f1), void>)) << std::endl;
+	LOGGER << PRINT(sizeof(small_function<void()>)) << std::endl;
+	LOGGER << PRINT(sizeof(sized_function<0, void()>)) << std::endl;
+}
 
 TEST(function_binds_to_normal_function)
 {

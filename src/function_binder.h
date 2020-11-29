@@ -9,21 +9,17 @@ namespace details {
 template<typename R, typename... Args>
 struct callable {
 	virtual R operator()(Args&&...) = 0;
-	virtual size_t size() const = 0;
 };
 
 template<typename F, typename R, typename... Args>
 struct binder : callable<R, Args...> {
 	F target;
 	binder(F f) : target{f} {}
-	//binder(F&& f) : target{f} {}
 
 	R operator()(Args&&... args) override
 	{
 		return target(std::forward<Args>(args)...);
 	}
-
-	constexpr size_t size() const override { return sizeof(*this); }
 };
 
 }
@@ -31,7 +27,6 @@ struct binder : callable<R, Args...> {
 template<size_t Size>
 struct fixed_size_storage {
 	static constexpr size_t max_size = Size;
-	static constexpr bool has_always_space = true;
 	constexpr void* get_write_space(size_t) { return space; }
 	constexpr void* get_read_space(size_t) { return space; }
 private:
@@ -61,10 +56,6 @@ struct function<Storage, R(Args...)> {
 		using callable = details::callable<R, Args...>;
 		void* space = storage.get_read_space(sizeof(callable));
 		auto f = reinterpret_cast<callable*>(space);
-		if constexpr (!Storage::has_always_space) {
-			space = storage.get_read_space((*f).size());
-			f = reinterpret_cast<callable*>(space);
-		}
 		return (*f)(std::forward<Args>(args)...);
 	}
 };
