@@ -66,6 +66,18 @@ TEST(make_type_string_creates_a_type_string_from_cstring_literal)
 	static_assert(s1::equal<v1>, "");
 }
 
+TEST(make_string_create_empty_string)
+{
+	auto v1 = MAKE_STRING("");
+	static_assert(decltype(v1)::length == 0, "");
+}
+
+TEST(make_type_string_create_empty_string)
+{
+	MAKE_STRING_TYPE(s1, "");
+	static_assert(s1::length == 0, "");
+}
+
 TEST(value_list_initialiser_list_view)
 {
 	using v1 = value_list<int, 0, 1, 2, 3, 4, 5>;
@@ -86,6 +98,16 @@ TEST(value_list_data_view)
 		LOGGER << PRINT(p1[i]) << std::endl;
 		ASSERT(p1[i] == i);
 	}
+}
+
+TEST(type_string_c_string_view_includes_null_termination)
+{
+	constexpr std::string_view expected = "Same string";
+	MAKE_STRING_TYPE(s1, "Same string");
+	const auto c1 = s1::c_str();
+	ASSERT(expected == c1);
+	ASSERT(c1[s1::length] == '\0');
+	LOGGER << PRINT(s1::c_str()) << std::endl;
 }
 
 int main()

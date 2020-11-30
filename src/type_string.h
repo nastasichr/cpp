@@ -23,21 +23,34 @@ struct value_list {
 };
 
 template<char... S>
-using type_string = value_list<char, S...>;
+struct type_string : value_list<char, S...> {
+private:
+	using base = value_list<char, S...>;
+public:
+
+	template<class U>
+	static constexpr bool equal = std::is_same<U, type_string<S...>>::value;
+
+	static const char* c_str()
+	{
+		static char values[base::length + 1] = {S..., '\0'};
+		return values;
+	}
+};
 
 namespace details {
 
-template <typename StringHolder, size_t...Is>
-constexpr auto make_string(StringHolder holder, std::index_sequence<Is...>)
+template <typename Holder, size_t...Is>
+constexpr auto make_string(Holder h, std::index_sequence<Is...>)
 {
-    constexpr std::string_view text = holder();
+    constexpr std::string_view text = h();
     return type_string<text[Is]...>{};
 }
 
-template <typename StringHolder, size_t...Is>
+template <typename Holder, size_t...Is>
 constexpr auto make_string(std::index_sequence<Is...>)
 {
-    constexpr std::string_view text = StringHolder::yield();
+    constexpr std::string_view text = Holder::yield();
     return type_string<text[Is]...>{};
 }
 
