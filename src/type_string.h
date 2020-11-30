@@ -44,6 +44,7 @@ template <typename Holder, size_t...Is>
 constexpr auto make_string(Holder h, std::index_sequence<Is...>)
 {
     constexpr std::string_view text = h();
+    (void)text;
     return type_string<text[Is]...>{};
 }
 
@@ -51,6 +52,7 @@ template <typename Holder, size_t...Is>
 constexpr auto make_string(std::index_sequence<Is...>)
 {
     constexpr std::string_view text = Holder::yield();
+    (void)text;
     return type_string<text[Is]...>{};
 }
 

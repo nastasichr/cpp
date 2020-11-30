@@ -15,9 +15,9 @@ TEST(make_type_uid_gives_unique_ids)
 	constexpr auto v_int     = make_unique_id<int>;
 	constexpr auto v_double  = make_unique_id<double>;
 	constexpr auto v_int_ref = make_unique_id<int&>;
-	static_assert(v_int != v_double, "");
-	static_assert(v_int != v_int_ref, "");
-	static_assert(v_int_ref != v_double, "");
+	ASSERT(v_int != v_double);
+	ASSERT(v_int != v_int_ref);
+	ASSERT(v_int_ref != v_double);
 }
 
 int main()
