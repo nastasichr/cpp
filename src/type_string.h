@@ -85,6 +85,8 @@ public:
 		static char values[base::length + 1] = {S..., '\0'};
 		return values;
 	}
+
+	static inline std::initializer_list<C> initializer_list = {S..., '\0'};
 };
 
 }
@@ -94,6 +96,33 @@ struct value_list : details::value_list<value_list, T, Values...> {};
 
 template<char... S>
 using type_string = details::base_type_string<char, S...>;
+
+template<typename T, T K>
+struct obfuscator {
+	template<T... Values>
+	struct _xor {
+		static constexpr T op(T v) { return v xor K;}
+		using type = details::base_type_string<T, op(Values)...>;
+	};
+
+	template<class List>
+	using encode = typename List::template apply<_xor>::type;
+
+	static constexpr void decode(const T* src, size_t len, T* dst)
+	{
+		for (size_t i = 0; i < len; ++i) {
+			dst[i] = src[i] xor K;
+		}
+		dst[len] = '\0';
+	}
+
+	static std::string decode(const T* src, size_t len)
+	{
+		T dst[len + 1];
+		decode(src, len, dst);
+		return dst;
+	}
+};
 
 namespace details {
 
