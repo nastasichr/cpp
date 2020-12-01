@@ -159,6 +159,39 @@ TEST(value_list_apply_metacalls_metafunction)
 	static_assert(v1::apply<sum>::value == 9111, "");
 }
 
+TEST(value_list_append_adds_items_in_tail)
+{
+	using v1 = value_list<int, 1, 2, 3>;
+	using v2 = v1::append<4, 5>;
+	static_assert(v2::equal<value_list<int, 1, 2, 3, 4, 5>>, "");
+
+	MAKE_STRING_TYPE(s1, "Hello ");
+	using s2 = s1::append<'t', 'h', 'e', 'r', 'e'>;
+	MAKE_STRING_TYPE(s3, "Hello there");
+	static_assert(s2::equal<s3>, "");
+	LOGGER << PRINT(s2::c_str()) << std::endl;
+}
+
+TEST(value_list_prepend_adds_items_in_front)
+{
+	using v1 = value_list<int, 1, 2, 3>;
+	using v2 = v1::prepend<4, 5>;
+	static_assert(v2::equal<value_list<int, 4, 5, 1, 2, 3>>, "");
+}
+
+TEST(value_list_merge_adds_items_in_tail)
+{
+	using v1 = value_list<int, 1, 2, 3>;
+	using v2 = value_list<int, 4, 5>;
+	using v3 = v1::merge<v2>;
+	static_assert(v3::equal<value_list<int, 1, 2, 3, 4, 5>>, "");
+
+	MAKE_STRING_TYPE(s1, "Hello ");
+	MAKE_STRING_TYPE(s2, "World");
+	using s3 = s1::merge<s2>;
+	LOGGER << PRINT(s3::c_str()) << std::endl;
+}
+
 int main()
 {
 	return test::registry::run_all("type_string") ? EXIT_SUCCESS : EXIT_FAILURE;

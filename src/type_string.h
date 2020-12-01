@@ -6,7 +6,9 @@
 
 namespace meta { namespace string {
 
-template<typename T, T... Values>
+namespace details {
+
+template<template<typename U, U...>class Derived, typename T, T... Values>
 struct value_list {
 private:
 	template<size_t P>
@@ -20,7 +22,7 @@ private:
 	template<size_t Offset, size_t... Indexes>
 	static constexpr auto safe_inner_slice(std::index_sequence<Indexes...>)
 	{
-		return value_list<T, at<Offset + Indexes>...>{};
+		return Derived<T, at<Offset + Indexes>...>{};
 	}
 public:
 	template<size_t From, size_t To>
@@ -32,7 +34,7 @@ public:
 		// recursions despite the static_assert above
 		// This gives better compile-time error
 		if constexpr (From > To || To > length) {
-			return value_list<T>{};
+			return Derived<T>{};
 		} else {
 			constexpr auto indexes = std::make_index_sequence<To - From>{};
 			return safe_inner_slice<From>(indexes);
@@ -44,7 +46,7 @@ public:
 	static constexpr bool empty = (length == 0);
 
 	template<class U>
-	static constexpr bool equal = std::is_same<U, value_list<T, Values...>>::value;
+	static constexpr bool equal = std::is_same<U, Derived<T, Values...>>::value;
 
 	static const T* data()
 	{
@@ -62,23 +64,36 @@ public:
 
 	template<template<T...> class Action>
 	using apply = Action<Values...>;
+
+	template<T... Others>
+	using append = Derived<T, Values..., Others...>;
+
+	template<T... Others>
+	using prepend = Derived<T, Others..., Values...>;
+
+	template<class List>
+	using merge = typename List::template prepend<Values...>;
 };
 
-template<char... S>
-struct type_string : value_list<char, S...> {
+template<typename C, C... S>
+struct base_type_string : details::value_list<base_type_string, char, S...> {
 private:
-	using base = value_list<char, S...>;
+	using base = details::value_list<base_type_string, char, S...>;
 public:
-
-	template<class U>
-	static constexpr bool equal = std::is_same<U, type_string<S...>>::value;
-
 	static const char* c_str()
 	{
 		static char values[base::length + 1] = {S..., '\0'};
 		return values;
 	}
 };
+
+}
+
+template<typename T, T... Values>
+struct value_list : details::value_list<value_list, T, Values...> {};
+
+template<char... S>
+using type_string = details::base_type_string<char, S...>;
 
 namespace details {
 
