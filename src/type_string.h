@@ -8,7 +8,40 @@ namespace meta { namespace string {
 
 template<typename T, T... Values>
 struct value_list {
+private:
+	template<size_t P>
+	static constexpr T safe_at()
+	{
+		static_assert(P < length, "Index out of bunds");
+		constexpr T values[length] = {Values...};
+		return values[P];
+	}
+
+	template<size_t Offset, size_t... Indexes>
+	static constexpr auto safe_inner_slice(std::index_sequence<Indexes...>)
+	{
+		return value_list<T, at<Offset + Indexes>...>{};
+	}
+public:
+	template<size_t From, size_t To>
+	static constexpr auto safe_slice()
+	{
+		static_assert(To <= length, "Upper-bound higher than lengh");
+		static_assert(From <= To, "Extremes must be ordered");
+		// The if-constexpr below avoids (potential) long compiler
+		// recursions despite the static_assert above
+		// This gives better compile-time error
+		if constexpr (From > To || To > length) {
+			return value_list<T>{};
+		} else {
+			constexpr auto indexes = std::make_index_sequence<To - From>{};
+			return safe_inner_slice<From>(indexes);
+		}
+	}
+public:
 	static constexpr size_t length = sizeof...(Values);
+	static constexpr size_t last_index = length - 1;
+	static constexpr bool empty = (length == 0);
 
 	template<class U>
 	static constexpr bool equal = std::is_same<U, value_list<T, Values...>>::value;
@@ -20,6 +53,12 @@ struct value_list {
 	}
 
 	static inline std::initializer_list<T> initializer_list = {Values...};
+
+	template<size_t P>
+	static constexpr T at = safe_at<P>();
+
+	template<size_t From, size_t To>
+	using slice = decltype(safe_slice<From, To>());
 };
 
 template<char... S>

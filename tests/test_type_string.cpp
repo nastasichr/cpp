@@ -110,6 +110,44 @@ TEST(type_string_c_string_view_includes_null_termination)
 	LOGGER << PRINT(s1::c_str()) << std::endl;
 }
 
+TEST(value_list_at_returns_item)
+{
+	using v1 = value_list<int, 10, 11, 12, 13, 14, 15>;
+	static_assert(v1::at<0> == 10, "");
+	static_assert(v1::at<v1::last_index> == 15, "");
+	//v1::at<v1::last_index + 1>; 	// Will static assert
+	//value_list<int>::at<0>;	// Will static assert
+}
+
+template<class List>
+void print_list()
+{
+	for (size_t i = 0; i < List::length; ++i) {
+		LOGGER << PRINT((List::data()[i])) << std::endl;
+	}
+}
+
+TEST(value_list_slice_returns_sub_list)
+{
+	using v1 = value_list<int, 10, 11, 12, 13, 14, 15>;
+	using s1 = v1::slice<0, 3>;
+	static_assert(value_list<int, 10, 11, 12>::equal<v1::slice<0, 3>>, "");
+	print_list<s1>();
+
+	using s2 = v1::slice<1, 2>;
+	static_assert(s2::at<0> == 11, "");
+
+	using s3 = v1::slice<1, 1>;
+	static_assert(s3::empty, "");
+
+	LOGGER << PRINT((meta::debug::to_string<s3>())) << std::endl;
+
+	static_assert(v1::equal<v1::slice<0, v1::length>>, "");
+
+	//using s4 = v1::slice<1, 0>;			// Will static assert
+	//using s4 = v1::slice<1, v1::length + 1>; 	// Will static assert
+}
+
 int main()
 {
 	return test::registry::run_all("type_string") ? EXIT_SUCCESS : EXIT_FAILURE;
