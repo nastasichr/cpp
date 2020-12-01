@@ -59,6 +59,9 @@ public:
 
 	template<size_t From, size_t To>
 	using slice = decltype(safe_slice<From, To>());
+
+	template<template<T...> class Action>
+	using apply = Action<Values...>;
 };
 
 template<char... S>

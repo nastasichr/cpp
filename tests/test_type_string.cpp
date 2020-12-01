@@ -148,6 +148,17 @@ TEST(value_list_slice_returns_sub_list)
 	//using s4 = v1::slice<1, v1::length + 1>; 	// Will static assert
 }
 
+template<int... Ints>
+struct sum {
+	static constexpr int value = (Ints + ...);
+};
+
+TEST(value_list_apply_metacalls_metafunction)
+{
+	using v1 = value_list<int, 1, 10, 100, 9000>;
+	static_assert(v1::apply<sum>::value == 9111, "");
+}
+
 int main()
 {
 	return test::registry::run_all("type_string") ? EXIT_SUCCESS : EXIT_FAILURE;
