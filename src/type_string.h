@@ -48,7 +48,7 @@ public:
 
 	static const T* data()
 	{
-		static T values[length] = {Values...};
+		static const T values[length] = {Values...};
 		return values;
 	}
 
