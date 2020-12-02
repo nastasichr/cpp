@@ -200,6 +200,21 @@ TEST(obfuscator_encode_makes_obfuscated_list)
 	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
 }
 
+TEST(obfuscator_encode_makes_obfuscated_list_with_wider_key)
+{
+	MAKE_STRING_TYPE(s1, "MIGHT_NOT_SEE_ME");
+	using s2 = meta::string::obfuscator<int32_t, 0x10203040>::encode<s1>::ret;
+	static_assert((s1::at<0> xor 0x40) == s2::at<0>, "");
+	static_assert((s1::at<1> xor 0x30) == s2::at<1>, "");
+	static_assert((s1::at<2> xor 0x20) == s2::at<2>, "");
+	static_assert((s1::at<3> xor 0x10) == s2::at<3>, "");
+	static_assert((s1::at<4> xor 0x40) == s2::at<4>, "");
+	static_assert((s1::at<5> xor 0x30) == s2::at<5>, "");
+	static_assert((s1::at<6> xor 0x20) == s2::at<6>, "");
+	static_assert((s1::at<7> xor 0x10) == s2::at<7>, "");
+	static_assert(!s1::equal<s2>, "");
+}
+
 TEST(obfuscator_decodes_obfuscated_string)
 {
 	MAKE_STRING_TYPE(s1, "MIGHT_NOT_SEE_ME");
@@ -207,6 +222,29 @@ TEST(obfuscator_decodes_obfuscated_string)
 	using s2 = ob::encode<s1>::ret;
 	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
 	LOGGER << "ORIGINAL  : " << ob::decode(s2::data(), s2::length) << std::endl;
+	ASSERT(std::string{s1::c_str()} == ob::decode(s2::data(), s2::length));
+}
+
+TEST(obfuscator_decodes_obfuscated_string_with_wider_key)
+{
+	MAKE_STRING_TYPE(s1, "MIGHT_NOT_SEE_ME");
+	using ob = meta::string::obfuscator<uint64_t, 0x1234567811223344>;
+	using s2 = ob::encode<s1>::ret;
+	static_assert(!s1::equal<s2>, "");
+	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
+	LOGGER << "ORIGINAL  : " << ob::decode(s2::data(), s2::length) << std::endl;
+	ASSERT(std::string{s1::c_str()} == ob::decode(s2::data(), s2::length));
+}
+
+TEST(obfuscator_decodes_obfuscated_string_with_wider_bad_key)
+{
+	MAKE_STRING_TYPE(s1, "MIGHT_NOT_SEE_ME");
+	using ob = meta::string::obfuscator<uint64_t, 0x1>;
+	using s2 = ob::encode<s1>::ret;
+	static_assert(!s1::equal<s2>, "");
+	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
+	LOGGER << "ORIGINAL  : " << ob::decode(s2::data(), s2::length) << std::endl;
+	ASSERT(std::string{s1::c_str()} == ob::decode(s2::data(), s2::length));
 }
 
 TEST(obfuscated_string_is_constructed)

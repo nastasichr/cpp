@@ -112,31 +112,67 @@ struct value_list : details::value_list<value_list, T, Values...> {};
 template<char... S>
 using type_string = details::base_type_string<char, S...>;
 
-template<typename T, T K>
+template<typename T>
+constexpr bool is_power_of_two(T v)
+{
+	return v && ((v & (v - 1)) == 0);
+}
+
+namespace details {
+
+template<typename T, typename K>
+constexpr T encode_value(size_t i, T v, K k)
+{
+	if constexpr (sizeof(T) >= sizeof(K)) {
+		return v xor k;
+	} else {
+		static_assert(is_power_of_two(sizeof(K)), "Key should be power of 2");
+		static_assert(is_power_of_two(sizeof(T)), "Type should be power of 2");
+		constexpr size_t n = sizeof(K) / sizeof(T);
+		static_assert(is_power_of_two(n), "Key should be power-of-2 bigger than Type");
+		size_t p = i & (n - 1);
+		constexpr size_t t_bits = 8 * sizeof(T);
+		constexpr K m = (1u << (t_bits)) - 1;
+		K x = (k >> (p * t_bits)) & m;
+		if (x == 0) {
+			x++;
+		}
+		return v xor x;
+	}
+}
+
+}
+
+template<typename K, K X>
 struct obfuscator {
-	static_assert(K != 0, "Cannot use zero as a key");
+	static_assert(X != 0, "Cannot use zero as a key");
 
 	template<class List>
 	struct encode {
+		using T = typename List::element_type;
 		template<T... Values>
 		struct _xor {
-			static constexpr T op(T v) { return v xor K;}
-			template<typename U, U... Vals>
-			using derived = typename List::template derived<U, Vals...>;
-			using type = derived<T, op(Values)...>;
+			template<size_t... Indexes>
+			struct zipped {
+				template<typename U, U... Vals>
+				using derived = typename List::template derived<U, Vals...>;
+				using type = derived<T, details::encode_value(Indexes, Values, X)...>;
+			};
 		};
 
-		using ret = typename List::template apply<_xor>::type;
+		using ret = typename List::template apply_zipped<_xor>::type;
 	};
 
+	template<typename T>
 	static constexpr void decode(const T* src, size_t len, T* dst)
 	{
 		for (size_t i = 0; i < len; ++i) {
-			dst[i] = src[i] xor K;
+			dst[i] = details::encode_value(i, src[i], X);
 		}
 		dst[len] = '\0';
 	}
 
+	template<typename T>
 	static std::string decode(const T* src, size_t len)
 	{
 		T dst[len + 1];
@@ -147,27 +183,31 @@ struct obfuscator {
 
 struct obfuscated_string {
 
-	const char key;
+	// using __ volatile __ in this class to prevent the compiler from
+	// over-optimising and producing the de-obfuscation result at compile-time
+	// instead of run-time, where we want it
+
+	const uint64_t key;
 	const size_t length;
 	volatile const char* const string;
 
 	template<class S>
-	constexpr obfuscated_string(char k, S)
+	constexpr obfuscated_string(uint64_t k, S)
 	: key{k}
 	, length{S::length}
 	, string{S::data()}
 	{}
 
-	template<char K, class S>
+	template<uint64_t K, class S>
 	static constexpr obfuscated_string make(S)
 	{
-		return {K, typename obfuscator<char, K>::template encode<S>::ret{}};
+		return {K, typename obfuscator<uint64_t, K>::template encode<S>::ret{}};
 	}
 
 	void decode(volatile char* dst) const
 	{
 		for (size_t i = 0; i < length; ++i) {
-			dst[i] = string[i] xor key;
+			dst[i] = details::encode_value(i, string[i], key);
 		}
 		dst[length] = '\0';
 	}
@@ -223,7 +263,7 @@ using name = decltype(meta::string::details::make_string<_a_##name>(std::make_in
 #define MAKE_OBFUSCATED_STRING(name, text) \
 struct _a_##name { static constexpr auto yield() { return text; } }; \
 using _s_##name = decltype(meta::string::details::make_string<_a_##name>(std::make_index_sequence<sizeof(text) - 1>())); \
-auto name = meta::string::obfuscated_string::make<(char)__LINE__>(_s_##name{})
+auto name = meta::string::obfuscated_string::make<0x11081982DEFEC8ED + __LINE__>(_s_##name{})
 
 #define TRY_MAKE_OBFUSCATED_STRING(text) \
-meta::string::obfuscated_string::make<(char)__LINE__>(MAKE_STRING(text))
+meta::string::obfuscated_string::make<0x11081982DEFEC8ED + __LINE__>(MAKE_STRING(text))
