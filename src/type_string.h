@@ -41,6 +41,11 @@ public:
 		}
 	}
 public:
+	using element_type = T;
+
+       template<typename U, U... Items>
+	using derived = Derived<U, Items...>;
+
 	static constexpr size_t length = sizeof...(Values);
 	static constexpr size_t last_index = length - 1;
 	static constexpr bool empty = (length == 0);
@@ -99,14 +104,18 @@ using type_string = details::base_type_string<char, S...>;
 
 template<typename T, T K>
 struct obfuscator {
-	template<T... Values>
-	struct _xor {
-		static constexpr T op(T v) { return v xor K;}
-		using type = details::base_type_string<T, op(Values)...>;
-	};
-
 	template<class List>
-	using encode = typename List::template apply<_xor>::type;
+	struct encode {
+		template<T... Values>
+		struct _xor {
+			static constexpr T op(T v) { return v xor K;}
+			template<typename U, U... Vals>
+			using derived = typename List::template derived<U, Vals...>;
+			using type = derived<T, op(Values)...>;
+		};
+
+		using ret = typename List::template apply<_xor>::type;
+	};
 
 	static constexpr void decode(const T* src, size_t len, T* dst)
 	{

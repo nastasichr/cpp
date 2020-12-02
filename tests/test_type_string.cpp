@@ -195,19 +195,18 @@ TEST(value_list_merge_adds_items_in_tail)
 TEST(obfuscator_encode_makes_obfuscated_list)
 {
 	MAKE_STRING_TYPE(s1, "SHOULD_NOT_SEE_ME");
-	using s2 = meta::string::obfuscator<char, 21>::encode<s1>;
+	using s2 = meta::string::obfuscator<char, 21>::encode<s1>::ret;
 	static_assert(!s1::equal<s2>, "");
 	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
 }
 
 TEST(obfuscator_decodes_obfuscated_string)
 {
-	using meta::string::obfuscator;
-
 	MAKE_STRING_TYPE(s1, "SHOULD_NOT_SEE_ME");
-	using s2 = obfuscator<char, 21>::encode<s1>;
+	using ob = meta::string::obfuscator<char, 21>;
+	using s2 = ob::encode<s1>::ret;
 	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
-	LOGGER << "ORIGINAL  : " << obfuscator<char, 21>::decode(s2::data(), s2::length) << std::endl;
+	LOGGER << "ORIGINAL  : " << ob::decode(s2::data(), s2::length) << std::endl;
 }
 
 int main()
