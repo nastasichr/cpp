@@ -40,6 +40,13 @@ public:
 			return safe_inner_slice<From>(indexes);
 		}
 	}
+
+	template<template<T...> class Action, size_t... Indexes>
+	static constexpr auto zip(std::index_sequence<Indexes...>)
+	{
+		return typename Action<Values...>::template zipped<Indexes...>{};
+	}
+
 public:
 	using element_type = T;
 
@@ -69,6 +76,9 @@ public:
 
 	template<template<T...> class Action>
 	using apply = Action<Values...>;
+
+	template<template<T...> class Action>
+	using apply_zipped = decltype(zip<Action>(std::make_index_sequence<length>{}));
 
 	template<T... Others>
 	using append = Derived<T, Values..., Others...>;

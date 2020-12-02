@@ -225,6 +225,24 @@ TEST(obfuscated_string_may_be_visible)
 		TRY_MAKE_OBFUSCATED_STRING("MIGHT_NOT SEE ME EITHER") << std::endl;
 }
 
+template<int... Ints>
+struct linear_combination {
+	template<size_t... Indexes>
+	struct zipped {
+		static constexpr auto op(size_t i, int v) { return i * v; }
+		static constexpr size_t value = (op(Ints, Indexes) + ...);
+	};
+};
+
+TEST(value_list_apply_zipped_metacalls_metafunction)
+{
+	using v1 = value_list<int, 0, 10, 100, 1000>;
+	using v2 = v1::apply_zipped<linear_combination>;
+	static_assert(v2::value == 3210, "");
+	LOGGER << "v1 = " << meta::debug::to_string<v1>() << std::endl;
+	LOGGER << "v2 = " << meta::debug::to_string<v2>() << std::endl;
+	LOGGER << PRINT(v2::value) << std::endl;
+}
 
 int main()
 {
