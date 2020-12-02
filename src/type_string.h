@@ -104,6 +104,8 @@ using type_string = details::base_type_string<char, S...>;
 
 template<typename T, T K>
 struct obfuscator {
+	static_assert(K != 0, "Cannot use zero as a key");
+
 	template<class List>
 	struct encode {
 		template<T... Values>
@@ -132,6 +134,51 @@ struct obfuscator {
 		return dst;
 	}
 };
+
+struct obfuscated_string {
+
+	const char key;
+	const size_t length;
+	volatile const char* const string;
+
+	template<class S>
+	constexpr obfuscated_string(char k, S)
+	: key{k}
+	, length{S::length}
+	, string{S::data()}
+	{}
+
+	template<char K, class S>
+	static constexpr obfuscated_string make(S)
+	{
+		return {K, typename obfuscator<char, K>::template encode<S>::ret{}};
+	}
+
+	void decode(volatile char* dst) const
+	{
+		for (size_t i = 0; i < length; ++i) {
+			dst[i] = string[i] xor key;
+		}
+		dst[length] = '\0';
+	}
+
+	std::string decode() const
+	{
+		volatile char dst[length + 1];
+		decode(dst);
+		return (char*)dst;
+	}
+
+	operator std::string () const
+	{
+		return decode();
+	}
+};
+
+std::ostream & operator<<(std::ostream &stream, const obfuscated_string& string)
+{
+	return stream << string.decode();
+}
 
 namespace details {
 
@@ -162,3 +209,11 @@ constexpr auto make_string(std::index_sequence<Is...>)
 #define MAKE_STRING_TYPE(name, text) \
 struct _a_##name { static constexpr auto yield() { return text; } }; \
 using name = decltype(meta::string::details::make_string<_a_##name>(std::make_index_sequence<sizeof(text) - 1>()))
+
+#define MAKE_OBFUSCATED_STRING(name, text) \
+struct _a_##name { static constexpr auto yield() { return text; } }; \
+using _s_##name = decltype(meta::string::details::make_string<_a_##name>(std::make_index_sequence<sizeof(text) - 1>())); \
+auto name = meta::string::obfuscated_string::make<(char)__LINE__>(_s_##name{})
+
+#define TRY_MAKE_OBFUSCATED_STRING(text) \
+meta::string::obfuscated_string::make<(char)__LINE__>(MAKE_STRING(text))

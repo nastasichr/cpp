@@ -194,7 +194,7 @@ TEST(value_list_merge_adds_items_in_tail)
 
 TEST(obfuscator_encode_makes_obfuscated_list)
 {
-	MAKE_STRING_TYPE(s1, "SHOULD_NOT_SEE_ME");
+	MAKE_STRING_TYPE(s1, "MIGHT_NOT_SEE_ME");
 	using s2 = meta::string::obfuscator<char, 21>::encode<s1>::ret;
 	static_assert(!s1::equal<s2>, "");
 	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
@@ -202,12 +202,29 @@ TEST(obfuscator_encode_makes_obfuscated_list)
 
 TEST(obfuscator_decodes_obfuscated_string)
 {
-	MAKE_STRING_TYPE(s1, "SHOULD_NOT_SEE_ME");
+	MAKE_STRING_TYPE(s1, "MIGHT_NOT_SEE_ME");
 	using ob = meta::string::obfuscator<char, 21>;
 	using s2 = ob::encode<s1>::ret;
 	LOGGER << "OBFUSCATED: " << s2::c_str() << std::endl;
 	LOGGER << "ORIGINAL  : " << ob::decode(s2::data(), s2::length) << std::endl;
 }
+
+TEST(obfuscated_string_is_constructed)
+{
+	using meta::string::obfuscated_string;
+
+	MAKE_OBFUSCATED_STRING(s, "SHOULD_NOT SEE ME EITHER");
+	LOGGER << "OBFUSCATED: " << s << std::endl;
+}
+
+TEST(obfuscated_string_may_be_visible)
+{
+	using meta::string::obfuscated_string;
+
+	LOGGER << "OBFUSCATED: " <<
+		TRY_MAKE_OBFUSCATED_STRING("MIGHT_NOT SEE ME EITHER") << std::endl;
+}
+
 
 int main()
 {
