@@ -1,3 +1,4 @@
+CFLAGS   ?=    # <- Something can be passed from the command line, e.g, -O1
 SRC_DIR  ?= src
 OBJ_DIR  := obj
 TEST_DIR := tests
@@ -19,7 +20,7 @@ INC_DIRS  := $(shell find $(SRC_DIR) -type d)
 INC_DIRS  += $(shell find $(TEST_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CPPFLAGS ?= $(INC_FLAGS) -g -std=c++17 -Wall -Werror -MMD
+CPPFLAGS ?= $(CFLAGS) $(INC_FLAGS) -g -std=c++17 -Wall -Werror -MMD
 
 all: $(TEST_RESS)
 
