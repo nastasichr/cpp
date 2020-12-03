@@ -9,6 +9,7 @@ TEST_SRCS := $(wildcard $(TEST_DIR)/test_*.cpp)
 TEST_OBJS := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(TEST_SRCS))
 TEST_DEPS := $(patsubst %.o, %.d, $(TEST_OBJS))
 TEST_BINS := $(patsubst %.cpp, $(OBJ_DIR)/%.bin, $(wildcard $(TEST_DIR)/test_*.cpp))
+TEST_SYMB := $(patsubst %.bin, %.bin_g, $(TEST_BINS))
 TEST_RESS := $(patsubst %.bin, %.PASSED, $(TEST_BINS))
 
 SRCS := $(wildcard src/*.cpp)
@@ -31,19 +32,23 @@ $(OBJ_DIR)/%.o: %.cpp
 %.PASSED: %.bin
 	./$< && touch $@
 
-%.bin: %.o $(OBJS)
+%.bin: %.bin_g
+	cp $< $@ && strip $@
+
+%.bin_g: %.o $(OBJS)
 	$(CXX) $(CPPFLAGS) $(LDFLAGS) $< -o $@ $(OBJS) $(LOADLIBES) $(LDLIBS)
 
 -include $(DEPS)
 -include $(TEST_DEPS)
 
-keep-alive-intermetiates: $(OBJS) $(TEST_OBJS) $(DEPS) $(TEST_DEPS) $(TEST_BINS)
+keep-alive-intermetiates: $(OBJS) $(TEST_OBJS) $(DEPS) $(TEST_DEPS) $(TEST_BINS) $(TEST_SYMB)
 
 .PHONY: clean
 clean:
 	rm -rf $(TEST_OBJS)
 	rm -rf $(TEST_DEPS)
 	rm -rf $(TEST_BINS)
+	rm -rf $(TEST_SYMB)
 	rm -rf $(TEST_RESS)
 	rm -rf $(OBJS)
 	rm -rf $(DEPS)
