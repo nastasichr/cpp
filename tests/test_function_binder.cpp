@@ -55,6 +55,13 @@ TEST(function_binds_to_lambda)
 	ASSERT(v == 12.21);
 }
 
+TEST(function_unbound_is_invalid)
+{
+	small_function<double()> f;
+	ASSERT(f.valid() == false);
+	ASSERT(!f);
+}
+
 int main()
 {
 	return test::registry::run_all("container_function") ? EXIT_SUCCESS : EXIT_FAILURE;
