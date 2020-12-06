@@ -20,6 +20,15 @@ TEST(make_type_uid_gives_unique_ids)
 	ASSERT(v_int_ref != v_double);
 }
 
+TEST(max_returns_norm_of_largest_item_in_pack)
+{
+	using t_max = typename meta::max<meta::size_of, char, int, long long>::type;
+	constexpr auto max = meta::max<meta::size_of, char, int, long long>::value;
+	static_assert(max == sizeof(long long), "");
+	static_assert(std::is_same<t_max, long long>::value, "");
+	//meta::max<meta::size_of>::value;  // Will static assert
+}
+
 int main()
 {
 	return test::registry::run_all("type_manip") ? EXIT_SUCCESS : EXIT_FAILURE;
