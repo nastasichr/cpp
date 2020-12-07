@@ -3,7 +3,7 @@
 #include <deque>
 
 using container::any_of;
-using container::type_dispatcher;
+using container::dispatch_queue;
 
 struct event1 {};
 struct event2 {};
@@ -51,7 +51,7 @@ struct queue {
 	void release(T*) { q.pop_front(); }
 };
 
-using event_dispatcher = type_dispatcher<queue, 1, event1, event2, event3>;
+using event_dispatcher = dispatch_queue<queue, 1, event1, event2, event3>;
 
 struct event_handler : event_dispatcher::subscriber {
 	 void visit(const event1&) override { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
@@ -59,7 +59,7 @@ struct event_handler : event_dispatcher::subscriber {
 	 void visit(const event3&) override { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
 };
 
-TEST(type_dispatcher_works)
+TEST(dispatch_queue_works)
 {
 	queue<event_dispatcher::element_type> q;
 	event_dispatcher d{q};

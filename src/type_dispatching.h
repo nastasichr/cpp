@@ -68,7 +68,7 @@ private:
 			" does not match concept " #prototype)
 
 template<template<typename>class Q, size_t N, typename... Types>
-struct type_dispatcher {
+struct dispatch_queue {
 	using element_type = any_of<Types...>;
 	using subscriber = typename element_type::visitor;
 	
@@ -76,7 +76,7 @@ struct type_dispatcher {
 	subscriber* subscribers[N] = {nullptr};
 	size_t count = 0;
 
-	type_dispatcher(Q<element_type>& q) : queue{q} {}
+	dispatch_queue(Q<element_type>& q) : queue{q} {}
 
 	void subscribe(subscriber& s)
 	{
