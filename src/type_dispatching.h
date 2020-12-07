@@ -3,6 +3,7 @@
 #include "type_manip.h"
 #include "type_list.h"
 #include "function_binder.h"
+#include "function_traits.h"
 
 namespace container {
 
@@ -60,6 +61,12 @@ private:
 	}
 };
 
+#define CONCEPT_MEMFUNC_MATCHER(prototype, target, memfunc) \
+	static_assert(meta::parse_function<decltype(&prototype::memfunc)>:: template equal< \
+			meta::parse_function<decltype(&target::memfunc)>>, \
+			"Given type " #target "::" #memfunc \
+			" does not match concept " #prototype)
+
 template<template<typename>class Q, size_t N, typename... Types>
 struct type_dispatcher {
 	using element_type = any_of<Types...>;
@@ -95,6 +102,19 @@ struct type_dispatcher {
 		}
 		queue.release(item);
 	}
+private:
+	struct queue_concept {
+		element_type* acquire();
+		void push(element_type*);
+		element_type* pop();
+		void release(element_type*);
+	};
+
+	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, acquire);
+	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, release);
+	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, push);
+	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, pop);
+
 };
 
 }
