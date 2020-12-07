@@ -41,7 +41,15 @@ TEST(any_of_visitor_gets_correct_call)
 	a1.accept(v1);
 }
 
-template<typename T> using queue = std::deque<T>;
+template<typename T>
+struct queue {
+	std::deque<T> q;
+
+	T* acquire() { q.emplace_back(); return &q.back(); }
+	void push(T*) { }
+	T* pop() { return &q.front(); }
+	void release(T*) { q.pop_front(); }
+};
 
 using event_dispatcher = type_dispatcher<queue, 1, event1, event2, event3>;
 

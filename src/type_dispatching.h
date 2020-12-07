@@ -82,17 +82,18 @@ struct type_dispatcher {
 	template<typename T, typename... Args>
 	void post(Args&&... args)
 	{
-		queue.emplace_back();
-		queue.back().template store<T>(std::forward<Args>(args)...);
+		element_type* item = queue.acquire();
+		item->template store<T>(std::forward<Args>(args)...);
+		queue.push(item);
 	}
 
 	void dispatch()
 	{
-		auto& item = queue.front();
+		element_type* item = queue.pop();
 		for (size_t i = 0; i < count; ++i) {
-			item.accept(*subscribers[i]);
+			item->accept(*subscribers[i]);
 		}
-		queue.pop_front();
+		queue.release(item);
 	}
 };
 
