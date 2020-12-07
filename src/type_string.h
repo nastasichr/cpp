@@ -230,6 +230,32 @@ std::ostream & operator<<(std::ostream &stream, const obfuscated_string& string)
 	return stream << string.decode();
 }
 
+template<typename S, class List>
+struct digest {
+private:
+	using T = typename List::element_type;
+
+	static_assert(sizeof(S) >= sizeof(T),
+		      "Digest type can't be smaller than list element type");
+
+	template<T... Values>
+	struct sum {
+		static constexpr S value = ((S)(Values) + ...);
+	};
+public:
+	static constexpr S value = List::template apply<sum>::value;
+};
+
+template<typename S, typename T, size_t N>
+constexpr S try_digest(const T (&v)[N])
+{
+	S sum = 0;
+	for (size_t i = 0; i < N; ++i) {
+		sum += (S)v[i];
+	}
+	return sum;
+}
+
 namespace details {
 
 template <typename Holder, size_t...Is>
@@ -248,6 +274,12 @@ constexpr auto make_string(std::index_sequence<Is...>)
     return type_string<text[Is]...>{};
 }
 
+static constexpr uint64_t random(uint64_t seed)
+{
+	// Not so random. Should use pseudo generator here
+	return 0x11081982DEFEC8ED + seed;
+}
+
 }
 
 }}
@@ -262,8 +294,18 @@ using name = decltype(meta::string::details::make_string<_a_##name>(std::make_in
 
 #define MAKE_OBFUSCATED_STRING(name, text) \
 struct _a_##name { static constexpr auto yield() { return text; } }; \
-using _s_##name = decltype(meta::string::details::make_string<_a_##name>(std::make_index_sequence<sizeof(text) - 1>())); \
-auto name = meta::string::obfuscated_string::make<0x11081982DEFEC8ED + __LINE__>(_s_##name{})
+struct _b_##name { static constexpr auto yield() { return __FILE__; } }; \
+using _s_##name = decltype(meta::string::details::make_string<_a_##name>(\
+			std::make_index_sequence<sizeof(text) - 1>())); \
+using _f_##name = decltype(meta::string::details::make_string<_b_##name>(\
+			std::make_index_sequence<sizeof(__FILE__) - 1>())); \
+auto name = meta::string::obfuscated_string::make<\
+	meta::string::details::random(__LINE__ + \
+				      meta::string::digest<uint64_t, _f_##name>::value)\
+	>(_s_##name{})
 
 #define TRY_MAKE_OBFUSCATED_STRING(text) \
-meta::string::obfuscated_string::make<0x11081982DEFEC8ED + __LINE__>(MAKE_STRING(text))
+meta::string::obfuscated_string::make<\
+	meta::string::details::random(__LINE__ + \
+				      meta::string::try_digest<uint64_t>(__FILE__))\
+	>(MAKE_STRING(text))

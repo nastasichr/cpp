@@ -249,16 +249,12 @@ TEST(obfuscator_decodes_obfuscated_string_with_wider_bad_key)
 
 TEST(obfuscated_string_is_constructed)
 {
-	using meta::string::obfuscated_string;
-
 	MAKE_OBFUSCATED_STRING(s, "SHOULD_NOT SEE ME EITHER");
 	LOGGER << "OBFUSCATED: " << s << std::endl;
 }
 
 TEST(obfuscated_string_may_be_visible)
 {
-	using meta::string::obfuscated_string;
-
 	LOGGER << "OBFUSCATED: " <<
 		TRY_MAKE_OBFUSCATED_STRING("MIGHT_NOT SEE ME EITHER") << std::endl;
 }
@@ -280,6 +276,16 @@ TEST(value_list_apply_zipped_metacalls_metafunction)
 	LOGGER << "v1 = " << meta::debug::to_string<v1>() << std::endl;
 	LOGGER << "v2 = " << meta::debug::to_string<v2>() << std::endl;
 	LOGGER << PRINT(v2::value) << std::endl;
+}
+
+TEST(digest_gives_different_results)
+{
+	using meta::string::digest;
+
+	using v1 = value_list<int, 0, 10, 100, 1000>;
+	using v2 = value_list<int, 1, 10, 100, 1000>;
+	static_assert(digest<long, v1>::value != digest<long, v2>::value, "");
+	//(void)digest<char, v1>::value; // Will statatic assert
 }
 
 int main()
