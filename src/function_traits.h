@@ -11,9 +11,9 @@ template<template<typename, typename...> class Action,typename R, typename... Ar
 struct parsed {
 	using ret_type = R;
 	using apply = Action<R, Args...>;
-	using identity = identity<R, Args...>;
+	using self = identity<R, Args...>;
 	template<class Other>
-	static constexpr bool equal = std::is_same<identity, typename Other::identity>::value;
+	static constexpr bool equal = std::is_same<self, typename Other::self>::value;
 };
 
 template<template<typename, typename...> class Action, typename> struct parse;
