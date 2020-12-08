@@ -5,15 +5,15 @@ namespace meta {
 
 namespace details { namespace function {
 
-template<typename Rv, typename... Avs> struct identity {};
+template<typename Rv, typename... Avs> struct signature {};
 
 template<template<typename, typename...> class Action,typename R, typename... Args>
 struct parsed {
 	using ret_type = R;
 	using apply = Action<R, Args...>;
-	using self = identity<R, Args...>;
+	using identity = signature<R, Args...>;
 	template<class Other>
-	static constexpr bool equal = std::is_same<self, typename Other::self>::value;
+	static constexpr bool equal = std::is_same<identity, typename Other::identity>::value;
 };
 
 template<template<typename, typename...> class Action, typename> struct parse;
