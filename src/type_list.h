@@ -5,7 +5,22 @@
 
 namespace meta {
 
+struct not_found;
+
 namespace details {
+
+template<template<typename> class Condition, typename... Ts>
+struct find_if {
+	using type = not_found;
+};
+
+template<template<typename> class Condition, typename T, typename... Ts>
+struct find_if<Condition, T, Ts...> {
+	using type = typename std::conditional<
+		Condition<T>::value,
+		T,
+		typename find_if<Condition, Ts...>::type>::type;
+};
 
 template<typename T, typename... Ts> struct index_of;
 
@@ -80,6 +95,9 @@ public:
 
 	template<typename T>
 	static constexpr size_t index_of = safe_index_of<T>();
+
+	template<template<typename> class Condition>
+	using find_if = typename details::find_if<Condition, Ts...>::type;
 
 	static constexpr bool is_unique = decltype((type_set{} + ... + base<Ts>{}))::size == size;
 

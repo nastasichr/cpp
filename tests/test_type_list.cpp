@@ -170,6 +170,15 @@ TEST(type_list_passes_types_to_lambda_with_for_each_as_args)
 	});
 }
 
+
+template<typename T> struct is_fat { static constexpr bool value = sizeof(T) > 512; };
+
+TEST(type_list_find_if_finds_type_with_meta_codition)
+{
+	ASSERT_TYPE_EQ(list3::find_if<is_fat>, abstract);
+	ASSERT_TYPE_EQ(list2::find_if<is_fat>, meta::not_found);
+}
+
 int main()
 {
 	return test::registry::run_all("type_list") ? EXIT_SUCCESS : EXIT_FAILURE;
