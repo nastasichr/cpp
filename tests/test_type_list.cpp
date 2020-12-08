@@ -182,6 +182,7 @@ TEST(type_list_find_if_finds_type_with_meta_codition)
 
 using meta::type_map;
 using meta::value_type_pair;
+using meta::type_value_pair;
 using meta::type_type_pair;
 
 using map1 = type_map<value_type_pair<1, int>>;
@@ -255,6 +256,34 @@ TEST(type_type_map_looksup_ok)
 TEST(type_type_map_looksup_fails)
 {
 	ASSERT_TYPE_EQ(map11::at<double>, meta::not_found);
+}
+
+using map21 = type_map<type_value_pair<int, 1>>;
+using map22 = type_map<
+		type_value_pair<int, 2>,
+		type_value_pair<int*, 3>
+	     >;
+// Will static_assert
+using map23 = type_map<type_value_pair<int, 1>, type_value_pair<int, 2>>;
+using map24 = type_map<
+		type_value_pair<void,    1>,
+		type_value_pair<void*,   22>,
+		type_value_pair<void**,  3>,
+		type_value_pair<void***, 99>
+	     >;
+
+TEST(type_value_map_looksup_ok)
+{
+	static_assert(map21::at<int> == 1, "");
+	static_assert(map22::at<int> == 2, "");
+	static_assert(map22::at<int*> == 3, "");
+	static_assert(map24::at<void> == 1, "");
+	static_assert(map24::at<void*> == 22, "");
+	static_assert(map24::at<void**> == 3, "");
+	static_assert(map24::at<void***> == 99, "");
+	// Will static assert
+	//map23::at<int>;
+	//map21::at<double>;
 }
 
 int main()

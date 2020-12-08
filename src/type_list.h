@@ -137,13 +137,18 @@ struct type_type_pair {
 	using type = T;
 };
 
+template<typename K, size_t V>
+struct type_value_pair {
+	using key = K;
+	static constexpr size_t value = V;
+};
+
 template<class... Entries> struct type_map;
 
 template<size_t... Ks, typename... Ts>
 struct type_map<value_type_pair<Ks, Ts>...> {
 private:
 	using keys = type_list<value_to_type<Ks>...>;
-	using values = type_list<Ts...>;
 	using items = type_list<value_type_pair<Ks, Ts>...>;
 	static_assert(keys::is_unique, "List of keys should be unique");
 	template<size_t K>
@@ -174,7 +179,6 @@ template<typename... Ks, typename... Ts>
 struct type_map<type_type_pair<Ks, Ts>...> {
 private:
 	using keys = type_list<Ks...>;
-	using values = type_list<Ts...>;
 	using items = type_list<type_type_pair<Ks, Ts>...>;
 	static_assert(keys::is_unique, "List of keys should be unique");
 	template<typename K>
@@ -199,6 +203,33 @@ public:
 
 	template<typename K>
 	using at = typename std::remove_pointer<decltype(safe_at<K>())>::type;
+};
+
+template<typename... Ks, size_t... Vs>
+struct type_map<type_value_pair<Ks, Vs>...> {
+private:
+	using keys = type_list<Ks...>;
+	using items = type_list<type_value_pair<Ks, Vs>...>;
+	static_assert(keys::is_unique, "List of keys should be unique");
+	template<typename K>
+	struct key {
+		template<class Item>
+		struct matches {
+			static constexpr bool value = std::is_same_v<typename Item::key,K>;
+		};
+	};
+
+public:
+	template<typename K>
+	static constexpr auto safe_at()
+	{
+		using result = typename items::template find_if<key<K>::template matches>;
+		static_assert(!std::is_same<result, not_found>::value, "Key not found");
+		return result::value;
+	}
+
+	template<typename K>
+	static constexpr size_t at = safe_at<K>();
 };
 
 }
