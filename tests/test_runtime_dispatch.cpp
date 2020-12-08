@@ -3,7 +3,9 @@
 #include <deque>
 
 using container::any_of;
+using container::static_any_of;
 using container::dispatch_queue;
+using container::static_dispatch_queue;
 
 struct event1 {};
 struct event2 {};
@@ -21,24 +23,53 @@ struct a_visitor : any1::visitor {
 
 TEST(any_of_visitor_wont_get_anything_if_unset)
 {
-	any1 a1;
-	a_visitor v1;
-	a1.accept(v1);
+	any1 a;
+	a_visitor v;
+	a.accept(v);
 }
 
 TEST(any_of_visitor_gets_correct_call)
 {
-	any1 a1;
-	a_visitor v1;
+	any1 a;
+	a_visitor v;
 
-	a1 = 33.4f;
-	a1.accept(v1);
+	a = 33.4f;
+	a.accept(v);
 
-	a1 = 1;
-	a1.accept(v1);
+	a = 1;
+	a.accept(v);
 
-	a1 = event3{778, 0};
-	a1.accept(v1);
+	a = event3{778, 0};
+	a.accept(v);
+}
+
+using any2 = static_any_of<int, float, event3>;
+struct b_visitor final {
+	void visit(const int& v) { LOGGER << __PRETTY_FUNCTION__ << PRINT(v) << std::endl; }
+	void visit(const float& v) { LOGGER << __PRETTY_FUNCTION__ << PRINT(v) << std::endl; }
+	void visit(const event3& v) { LOGGER << __PRETTY_FUNCTION__ << PRINT(v.with_attributes[0]) << std::endl; }
+};
+
+TEST(static_any_of_visitor_wont_get_anything_if_unset)
+{
+	any2 a;
+	b_visitor v;
+	a.accept(v);
+}
+
+TEST(static_any_of_visitor_gets_correct_call)
+{
+	any2 a;
+	b_visitor v;
+
+	a = 33.4f;
+	a.accept(v);
+
+	a = 1;
+	a.accept(v);
+
+	a = event3{778, 0};
+	a.accept(v);
 }
 
 template<typename T>
@@ -77,6 +108,39 @@ TEST(dispatch_queue_works)
 	d.dispatch();
 	d.dispatch();
 }
+
+using static_dispatcher = static_dispatch_queue<queue, event1, event2, event3>;
+
+struct static_handler1 {
+	 void visit(const event1&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+	 void visit(const event2&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+	 void visit(const event3&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+};
+
+struct static_handler2 {
+	 void visit(const event1&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+	 void visit(const event2&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+	 void visit(const event3&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+};
+
+TEST(static_dispatch_queue_works)
+{
+	queue<static_dispatcher::element_type> q;
+	static_dispatcher d{q};
+	static_handler1 h1;
+	static_handler2 h2;
+
+	d.post<event1>();
+	d.post<event2>();
+	d.post<event1>();
+	d.post<event3>();
+
+	d.dispatch(h1, h2);
+	d.dispatch(h1, h2);
+	d.dispatch(h1, h2);
+	d.dispatch(h1, h2);
+}
+
 
 int main()
 {

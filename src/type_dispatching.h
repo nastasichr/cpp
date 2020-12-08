@@ -61,6 +61,67 @@ private:
 	}
 };
 
+template<typename... Types>
+struct static_any_of {
+private:
+	using size = uint16_t;
+	using types = meta::type_list<Types...>;
+	static_assert(types::is_unique, "List of types should be unique");
+public:
+	static_any_of() = default;
+
+	template<typename T>
+	static_any_of(T&& v)
+	{
+		static_assert(types::template has_type<T>, "Type not part of this any_of");
+		auto target = reinterpret_cast<T*>(space);
+		*target = v;
+		id = types::template index_of<T>;
+	}
+
+	template<typename T, typename... Args>
+	void store(Args&&... args)
+	{
+		static_assert(types::template has_type<T>, "Type not part of this any_of");
+		new (space) T{std::forward<Args>(args)...};
+		id = types::template index_of<T>;
+	}
+
+	template<class Visitor>
+	void accept(Visitor&& v)
+	{
+		(try_dispatch<Types, Visitor>(v) || ...);
+	}
+
+private:
+	union {
+		char space[meta::max<meta::size_of, Types...>::value];
+		typename meta::max<meta::align_of, Types...>::type alignment;
+	};
+	size id = types::size + 1;
+
+	template<typename T, class Visitor>
+	bool try_dispatch(Visitor&& v)
+	{
+		if (id == types::template index_of<T>) {
+			auto t = reinterpret_cast<const T&>(*space);
+			v.visit(t);
+			return true;
+		}
+		return false;
+	}
+};
+
+namespace details {
+template<typename T>
+struct queue_concept {
+	T* acquire();
+	void push(T*);
+	T* pop();
+	void release(T*);
+};
+};
+
 #define CONCEPT_MEMFUNC_MATCHER(prototype, target, memfunc) \
 	static_assert(meta::parse_function<decltype(&prototype::memfunc)>:: template equal< \
 			meta::parse_function<decltype(&target::memfunc)>>, \
@@ -71,7 +132,7 @@ template<template<typename>class Q, size_t N, typename... Types>
 struct dispatch_queue {
 	using element_type = any_of<Types...>;
 	using subscriber = typename element_type::visitor;
-	
+
 	Q<element_type>& queue;
 	subscriber* subscribers[N] = {nullptr};
 	size_t count = 0;
@@ -103,18 +164,41 @@ struct dispatch_queue {
 		queue.release(item);
 	}
 private:
-	struct queue_concept {
-		element_type* acquire();
-		void push(element_type*);
-		element_type* pop();
-		void release(element_type*);
-	};
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, acquire);
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, release);
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, push);
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, pop);
 
-	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, acquire);
-	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, release);
-	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, push);
-	CONCEPT_MEMFUNC_MATCHER(queue_concept, Q<element_type>, pop);
+};
 
+template<template<typename>class Q, typename... Types>
+struct static_dispatch_queue {
+	using element_type = static_any_of<Types...>;
+
+	Q<element_type>& queue;
+
+	static_dispatch_queue(Q<element_type>& q) : queue{q} {}
+
+	template<typename T, typename... Args>
+	void post(Args&&... args)
+	{
+		element_type* item = queue.acquire();
+		item->template store<T>(std::forward<Args>(args)...);
+		queue.push(item);
+	}
+
+	template<class... Visitors>
+	void dispatch(Visitors&&... vs)
+	{
+		element_type* item = queue.pop();
+		(item->accept(vs), ...);
+		queue.release(item);
+	}
+private:
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, acquire);
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, release);
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, push);
+	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, pop);
 };
 
 }
