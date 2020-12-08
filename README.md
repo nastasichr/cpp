@@ -26,6 +26,7 @@ These are some helpers defined in this project that might come in handy:
 ### Compiler explorer at godbolt.org
 
 - [`type_string`](https://godbolt.org/z/7Wrd4d)
+- [`dispatch_queue` and `static_dispatch_queue`](https://godbolt.org/z/sseKb8)
 
 ---
 ### Disclaimer
