@@ -182,6 +182,7 @@ TEST(type_list_find_if_finds_type_with_meta_codition)
 
 using meta::type_map;
 using meta::value_type_pair;
+using meta::type_type_pair;
 
 using map1 = type_map<value_type_pair<1, int>>;
 using map2 = type_map<
@@ -221,6 +222,39 @@ TEST(value_type_map_lookups_ok)
 TEST(value_type_map_lookups_fails)
 {
 	ASSERT_TYPE_EQ(map1::at<2>, meta::not_found);
+}
+
+using map11 = type_map<type_type_pair<int, double>>;
+using map12 = type_map<
+		type_type_pair<int, int>,
+		type_type_pair<int*, abstract>
+	     >;
+// Will static_assert
+using map13 = type_map<type_type_pair<int, int>, type_type_pair<int, abstract>>;
+using map14 = type_map<
+		type_type_pair<void,    int>,
+		type_type_pair<void*,   abstract>,
+		type_type_pair<void**,  int>,
+		type_type_pair<void***, float>
+	     >;
+
+TEST(type_type_map_looksup_ok)
+{
+	//LOGGER << meta::debug::to_string<map13::values>() << std::endl;
+	ASSERT_TYPE_EQ(map11::at<int>, double);
+	ASSERT_TYPE_EQ(map12::at<int>, int);
+	ASSERT_TYPE_EQ(map12::at<int*>, abstract);
+	// Will static assert
+	//ASSERT_TYPE_EQ(map13::at<int>, int);
+	ASSERT_TYPE_EQ(map14::at<void>, int);
+	ASSERT_TYPE_EQ(map14::at<void*>, abstract);
+	ASSERT_TYPE_EQ(map14::at<void**>, int);
+	ASSERT_TYPE_EQ(map14::at<void***>, float);
+}
+
+TEST(type_type_map_looksup_fails)
+{
+	ASSERT_TYPE_EQ(map11::at<double>, meta::not_found);
 }
 
 int main()
