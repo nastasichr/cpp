@@ -128,24 +128,14 @@ struct queue_concept {
 			"Given type " #target "::" #memfunc \
 			" does not match concept " #prototype)
 
-template<template<typename>class Q, size_t N, typename... Types>
+template<template<typename>class Q, typename... Types>
 struct dispatch_queue {
 	using element_type = any_of<Types...>;
 	using subscriber = typename element_type::visitor;
 
 	Q<element_type>& queue;
-	subscriber* subscribers[N] = {nullptr};
-	size_t count = 0;
 
 	dispatch_queue(Q<element_type>& q) : queue{q} {}
-
-	void subscribe(subscriber& s)
-	{
-		if (count == N) {
-			return;
-		}
-		subscribers[count++] = &s;
-	}
 
 	template<typename T, typename... Args>
 	void post(Args&&... args)
@@ -155,12 +145,10 @@ struct dispatch_queue {
 		queue.push(item);
 	}
 
-	void dispatch()
+	void dispatch(subscriber& s)
 	{
 		element_type* item = queue.pop();
-		for (size_t i = 0; i < count; ++i) {
-			item->accept(*subscribers[i]);
-		}
+		item->accept(s);
 		queue.release(item);
 	}
 private:

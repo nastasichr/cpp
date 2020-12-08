@@ -82,7 +82,7 @@ struct queue {
 	void release(T*) { q.pop_front(); }
 };
 
-using event_dispatcher = dispatch_queue<queue, 1, event1, event2, event3>;
+using event_dispatcher = dispatch_queue<queue, event1, event2, event3>;
 
 struct event_handler : event_dispatcher::subscriber {
 	 void visit(const event1&) override { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
@@ -96,17 +96,15 @@ TEST(dispatch_queue_works)
 	event_dispatcher d{q};
 	event_handler h;
 
-	d.subscribe(h);
-
 	d.post<event1>();
 	d.post<event2>();
 	d.post<event1>();
 	d.post<event3>();
 
-	d.dispatch();
-	d.dispatch();
-	d.dispatch();
-	d.dispatch();
+	d.dispatch(h);
+	d.dispatch(h);
+	d.dispatch(h);
+	d.dispatch(h);
 }
 
 using static_dispatcher = static_dispatch_queue<queue, event1, event2, event3>;
@@ -140,7 +138,6 @@ TEST(static_dispatch_queue_works)
 	d.dispatch(h1, h2);
 	d.dispatch(h1, h2);
 }
-
 
 int main()
 {
