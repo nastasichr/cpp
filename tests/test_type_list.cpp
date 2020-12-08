@@ -1,3 +1,4 @@
+#include "type_debug.h"
 #include "type_list.h"
 #include "testing.h"
 
@@ -177,6 +178,49 @@ TEST(type_list_find_if_finds_type_with_meta_codition)
 {
 	ASSERT_TYPE_EQ(list3::find_if<is_fat>, abstract);
 	ASSERT_TYPE_EQ(list2::find_if<is_fat>, meta::not_found);
+}
+
+using meta::type_map;
+using meta::value_type_pair;
+
+using map1 = type_map<value_type_pair<1, int>>;
+using map2 = type_map<
+		value_type_pair<1, int>,
+		value_type_pair<2, abstract>
+	     >;
+// Will static_assert
+//using map3 = type_map<value_type_pair<1, int>, value_type_pair<1, abstract>>;
+using map4 = type_map<
+		value_type_pair<7,   int>,
+		value_type_pair<9,   abstract>,
+		value_type_pair<10,  int>,
+		value_type_pair<100, int>
+	     >;
+
+TEST(value_to_type_gives_different_types)
+{
+	using t1 = meta::value_to_type<1>;
+	using t2 = meta::value_to_type<2>;
+	using d1 = meta::value_to_type<1>;
+
+	ASSERT_TYPE_NE(t1, t2);
+	ASSERT_TYPE_EQ(t1, d1);
+}
+
+TEST(value_type_map_lookups_ok)
+{
+	ASSERT_TYPE_EQ(map1::at<1>, int);
+	ASSERT_TYPE_EQ(map2::at<1>, int);
+	ASSERT_TYPE_EQ(map2::at<2>, abstract);
+	ASSERT_TYPE_EQ(map4::at<7>, int);
+	ASSERT_TYPE_EQ(map4::at<9>, abstract);
+	ASSERT_TYPE_EQ(map4::at<10>, int);
+	ASSERT_TYPE_EQ(map4::at<100>, int);
+}
+
+TEST(value_type_map_lookups_fails)
+{
+	ASSERT_TYPE_EQ(map1::at<2>, meta::not_found);
 }
 
 int main()

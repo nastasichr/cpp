@@ -48,6 +48,8 @@ struct type_at<pos, T, Ts...> {
 
 }
 
+template<size_t N> struct value_to_type;
+
 template<typename B> struct placeholder {
 	using type = B;
 };
@@ -121,6 +123,45 @@ public:
 	{
 		return f(placeholder<Ts>{}...);
 	}
+};
+
+template<size_t K, typename T>
+struct value_type_pair {
+	static constexpr size_t key = K;
+	using type = T;
+};
+
+template<class... Entries> struct type_map;
+
+template<size_t... Ks, typename... Ts>
+struct type_map<value_type_pair<Ks, Ts>...> {
+private:
+	using keys = type_list<value_to_type<Ks>...>;
+	using values = type_list<Ts...>;
+	using items = type_list<value_type_pair<Ks, Ts>...>;
+	static_assert(keys::is_unique, "List of keys should be unique");
+	template<size_t K>
+	struct key {
+		template<class Item>
+		struct matches {
+			static constexpr bool value = (Item::key == K);
+		};
+	};
+
+public:
+	template<size_t K>
+	static constexpr auto safe_at()
+	{
+		using result = typename items::template find_if<key<K>::template matches>;
+		if constexpr (std::is_same<result, not_found>::value) {
+			return (not_found *)nullptr;
+		} else {
+			return (typename result::type *)nullptr;
+		}
+	}
+
+	template<size_t K>
+	using at = typename std::remove_pointer<decltype(safe_at<K>())>::type;
 };
 
 }
