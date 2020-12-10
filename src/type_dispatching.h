@@ -247,15 +247,18 @@ private:
 	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, pop);
 };
 
+template<typename...> struct dispatch_map;
 
-template<class TypeMap>
-struct dispatch_map {
+template<size_t... Ids, typename... Types>
+struct dispatch_map<meta::type_map<meta::value_type_pair<Ids, Types>...>> {
 private:
+	using map = meta::type_map<meta::value_type_pair<Ids, Types>...>;
+
 	template<size_t ID, class Visitor>
 	static constexpr bool try_dispatch(size_t id, void* data, Visitor&& v)
 	{
 		if (id == ID) {
-			v.visit(*(reinterpret_cast<typename TypeMap::template at<ID>*>(data)));
+			v.visit(*(reinterpret_cast<typename map::template at<ID>*>(data)));
 			return true;
 		}
 		return false;
@@ -264,10 +267,7 @@ public:
 	template<class Visitor>
 	static void dispatch(size_t id, void* data, Visitor&& v)
 	{
-		const bool dispatched =
-			TypeMap::keys::for_each_as_args([id, data, &v](auto...t) {
-				return (try_dispatch<decltype(t)::type::value>(id, data, v) || ...);
-			});
+		const bool dispatched = (try_dispatch<Ids>(id, data, v) || ...);
 		if (!dispatched) {
 			v.visit_uknown(id);
 		}
