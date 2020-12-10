@@ -3,9 +3,7 @@
 #include <deque>
 
 using container::any_of;
-using container::static_any_of;
 using container::dispatch_queue;
-using container::static_dispatch_queue;
 
 struct event1 {};
 struct event2 {};
@@ -14,7 +12,7 @@ struct event3 {
 };
 
 
-using any1 = any_of<int, float, event3>;
+using any1 = any_of<container::options::fast, int, float, event3>;
 struct a_visitor : any1::visitor {
 	void visit(const int& v) override { LOGGER << __PRETTY_FUNCTION__ << PRINT(v) << std::endl; }
 	void visit(const float& v) override { LOGGER << __PRETTY_FUNCTION__ << PRINT(v) << std::endl; }
@@ -43,7 +41,7 @@ TEST(any_of_visitor_gets_correct_call)
 	a.accept(v);
 }
 
-using any2 = static_any_of<int, float, event3>;
+using any2 = any_of<int, float, event3>;
 struct b_visitor final {
 	void visit(const int& v) { LOGGER << __PRETTY_FUNCTION__ << PRINT(v) << std::endl; }
 	void visit(const float& v) { LOGGER << __PRETTY_FUNCTION__ << PRINT(v) << std::endl; }
@@ -82,7 +80,8 @@ struct queue {
 	void release(T*) { q.pop_front(); }
 };
 
-using event_dispatcher = dispatch_queue<queue, event1, event2, event3>;
+using event_dispatcher = dispatch_queue<queue, container::options::fast,
+					 event1, event2, event3>;
 
 struct event_handler : event_dispatcher::subscriber {
 	 void visit(const event1&) override { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
@@ -107,7 +106,7 @@ TEST(dispatch_queue_works)
 	d.dispatch(h);
 }
 
-using static_dispatcher = static_dispatch_queue<queue, event1, event2, event3>;
+using static_dispatcher = dispatch_queue<queue, event1, event2, event3>;
 
 struct static_handler1 {
 	 void visit(const event1&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
