@@ -150,6 +150,7 @@ template<class... Entries> struct type_map;
 
 template<size_t... Ks, typename... Ts>
 struct type_map<value_type_pair<Ks, Ts>...> {
+	using reverse = type_map<type_value_pair<Ts, Ks>...>;
 	using keys = type_list<value_to_type<Ks>...>;
 private:
 	using items = type_list<value_type_pair<Ks, Ts>...>;
@@ -180,6 +181,7 @@ public:
 
 template<typename... Ks, typename... Ts>
 struct type_map<type_type_pair<Ks, Ts>...> {
+	using reverse = type_map<type_type_pair<Ts, Ks>...>;
 private:
 	using keys = type_list<Ks...>;
 	using items = type_list<type_type_pair<Ks, Ts>...>;
@@ -210,6 +212,7 @@ public:
 
 template<typename... Ks, size_t... Vs>
 struct type_map<type_value_pair<Ks, Vs>...> {
+	using reverse = type_map<value_type_pair<Vs, Ks>...>;
 private:
 	using keys = type_list<Ks...>;
 	using items = type_list<type_value_pair<Ks, Vs>...>;

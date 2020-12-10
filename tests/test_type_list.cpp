@@ -225,6 +225,20 @@ TEST(value_type_map_lookups_fails)
 	ASSERT_TYPE_EQ(map1::at<2>, meta::not_found);
 }
 
+TEST(value_type_map_reversible)
+{
+	using rev1 = map2::reverse;
+	static_assert(rev1::at<int> == 1, "");
+	static_assert(rev1::at<abstract> == 2, "");
+	using map = type_map<
+		type_value_pair<int, 1>,
+		type_value_pair<abstract, 2>
+	     >;
+	ASSERT_TYPE_EQ(rev1, map);
+	// Not reversible: will static assert
+	//using rev4 = map4::reverse; rev4::keys;
+}
+
 using map11 = type_map<type_type_pair<int, double>>;
 using map12 = type_map<
 		type_type_pair<int, int>,
