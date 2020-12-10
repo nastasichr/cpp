@@ -120,9 +120,9 @@ struct queue_concept {
 	T* pop();
 	void release(T*);
 };
-};
+}
 
-#define CONCEPT_MEMFUNC_MATCHER(prototype, target, memfunc) \
+#define CONCEPT_MEMFUNC_ASSERT(prototype, target, memfunc) \
 	static_assert(meta::parse_function<decltype(&prototype::memfunc)>:: template equal< \
 			meta::parse_function<decltype(&target::memfunc)>>, \
 			"Given type " #target "::" #memfunc \
@@ -152,10 +152,10 @@ struct dispatch_queue {
 		queue.release(item);
 	}
 private:
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, acquire);
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, release);
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, push);
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, pop);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, acquire);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, release);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, push);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, pop);
 
 };
 
@@ -183,10 +183,10 @@ struct static_dispatch_queue {
 		queue.release(item);
 	}
 private:
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, acquire);
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, release);
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, push);
-	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, pop);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, acquire);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, release);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, push);
+	CONCEPT_MEMFUNC_ASSERT(details::queue_concept<element_type>, Q<element_type>, pop);
 };
 
 
@@ -194,7 +194,7 @@ template<class TypeMap>
 struct dispatch_map {
 private:
 	template<size_t ID, class Visitor>
-	static bool try_dispatch(size_t id, void* data, Visitor&& v)
+	static constexpr bool try_dispatch(size_t id, void* data, Visitor&& v)
 	{
 		if (id == ID) {
 			v.visit(*(reinterpret_cast<typename TypeMap::template at<ID>*>(data)));
