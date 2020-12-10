@@ -2,6 +2,7 @@
 
 #include "type_manip.h"
 #include "type_list.h"
+#include "type_map.h"
 #include "function_binder.h"
 #include "function_traits.h"
 
