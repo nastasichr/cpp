@@ -189,4 +189,31 @@ private:
 	CONCEPT_MEMFUNC_MATCHER(details::queue_concept<element_type>, Q<element_type>, pop);
 };
 
+
+template<class TypeMap>
+struct dispatch_map {
+private:
+	template<size_t ID, class Visitor>
+	static bool try_dispatch(size_t id, void* data, Visitor&& v)
+	{
+		if (id == ID) {
+			v.visit(*(reinterpret_cast<typename TypeMap::template at<ID>*>(data)));
+			return true;
+		}
+		return false;
+	}
+public:
+	template<class Visitor>
+	static void dispatch(size_t id, void* data, Visitor&& v)
+	{
+		const bool dispatched =
+			TypeMap::keys::for_each_as_args([id, data, &v](auto...t) {
+				return (try_dispatch<decltype(t)::type::value>(id, data, v) || ...);
+			});
+		if (!dispatched) {
+			v.visit_uknown(id);
+		}
+	}
+};
+
 }

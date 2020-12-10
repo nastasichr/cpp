@@ -113,6 +113,7 @@ struct static_handler1 {
 	 void visit(const event1&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
 	 void visit(const event2&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
 	 void visit(const event3&) { LOGGER << __PRETTY_FUNCTION__ << std::endl; }
+	 void visit_uknown(size_t i) { LOGGER << __PRETTY_FUNCTION__ << " id=" << i << std::endl; }
 };
 
 struct static_handler2 {
@@ -137,6 +138,42 @@ TEST(static_dispatch_queue_works)
 	d.dispatch(h1, h2);
 	d.dispatch(h1, h2);
 	d.dispatch(h1, h2);
+}
+
+using meta::type_map;
+using meta::value_type_pair;
+using container::dispatch_map;
+
+using map1 = type_map<
+		value_type_pair<10, event1>,
+		value_type_pair<20, event2>,
+		value_type_pair<30, event3>
+		>;
+
+TEST(dispatch_map_calls_visitor_functions)
+{
+	event1 e1;
+	event2 e2;
+	event3 e3;
+	static_handler1 h1;
+
+	using d1 = dispatch_map<map1>;
+	d1::dispatch(10, &e1, h1);
+	d1::dispatch(20, &e2, h1);
+	d1::dispatch(30, &e3, h1);
+}
+
+TEST(dispatch_map_calls_visitor_uknown_handler)
+{
+	event1 e1;
+	event2 e2;
+	event3 e3;
+	static_handler1 h1;
+
+	using d1 = dispatch_map<map1>;
+	d1::dispatch(1, &e1, h1);
+	d1::dispatch(2, &e2, h1);
+	d1::dispatch(3, &e3, h1);
 }
 
 int main()

@@ -48,7 +48,10 @@ struct type_at<pos, T, Ts...> {
 
 }
 
-template<size_t N> struct value_to_type;
+template<size_t N>
+struct value_to_type {
+	static constexpr size_t value = N;
+};
 
 template<typename B> struct placeholder {
 	using type = B;
@@ -147,8 +150,8 @@ template<class... Entries> struct type_map;
 
 template<size_t... Ks, typename... Ts>
 struct type_map<value_type_pair<Ks, Ts>...> {
-private:
 	using keys = type_list<value_to_type<Ks>...>;
+private:
 	using items = type_list<value_type_pair<Ks, Ts>...>;
 	static_assert(keys::is_unique, "List of keys should be unique");
 	template<size_t K>
