@@ -4,6 +4,9 @@
 
 using container::any_of;
 using container::dispatch_queue;
+using meta::type_map;
+using meta::value_type_pair;
+using container::dispatch_map;
 
 struct event1 {};
 struct event2 {};
@@ -19,14 +22,14 @@ struct a_visitor : any1::visitor {
 	void visit(const event3& v) override { LOGGER << __PRETTY_FUNCTION__ << PRINT(v.with_attributes[0]) << std::endl; }
 };
 
-TEST(any_of_visitor_wont_get_anything_if_unset)
+TEST(any_of_fast_visitor_wont_get_anything_if_unset)
 {
 	any1 a;
 	a_visitor v;
 	a.accept(v);
 }
 
-TEST(any_of_visitor_gets_correct_call)
+TEST(any_of_fast_visitor_gets_correct_call)
 {
 	any1 a;
 	a_visitor v;
@@ -48,16 +51,44 @@ struct b_visitor final {
 	void visit(const event3& v) { LOGGER << __PRETTY_FUNCTION__ << PRINT(v.with_attributes[0]) << std::endl; }
 };
 
-TEST(static_any_of_visitor_wont_get_anything_if_unset)
+TEST(any_of_visitor_wont_get_anything_if_unset)
 {
 	any2 a;
 	b_visitor v;
 	a.accept(v);
 }
 
-TEST(static_any_of_visitor_gets_correct_call)
+TEST(any_of_visitor_gets_correct_call)
 {
 	any2 a;
+	b_visitor v;
+
+	a = 33.4f;
+	a.accept(v);
+
+	a = 1;
+	a.accept(v);
+
+	a = event3{778, 0};
+	a.accept(v);
+}
+
+using any3 = any_of<type_map<
+		value_type_pair<10, int>,
+		value_type_pair<20, float>,
+		value_type_pair<30, event3>
+		>>;
+
+TEST(any_of_map_visitor_wont_get_anything_if_unset)
+{
+	any3 a;
+	b_visitor v;
+	a.accept(v);
+}
+
+TEST(any_of_map_visitor_gets_correct_call)
+{
+	any3 a;
 	b_visitor v;
 
 	a = 33.4f;
@@ -139,9 +170,29 @@ TEST(static_dispatch_queue_works)
 	d.dispatch(h1, h2);
 }
 
-using meta::type_map;
-using meta::value_type_pair;
-using container::dispatch_map;
+using map_dispatcher = dispatch_queue<queue,type_map<
+				value_type_pair<10, event1>,
+				value_type_pair<20, event2>,
+				value_type_pair<30, event3>
+				>>;
+
+TEST(map_dispatch_queue_works)
+{
+	queue<map_dispatcher::element_type> q;
+	map_dispatcher d{q};
+	static_handler1 h1;
+	static_handler2 h2;
+
+	d.post<event1>();
+	d.post<event2>();
+	d.post<event1>();
+	d.post<event3>();
+
+	d.dispatch(h1, h2);
+	d.dispatch(h1, h2);
+	d.dispatch(h1, h2);
+	d.dispatch(h1, h2);
+}
 
 using map1 = type_map<
 		value_type_pair<10, event1>,

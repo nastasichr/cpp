@@ -117,6 +117,60 @@ private:
 	}
 };
 
+template<size_t... Ids, typename... Types>
+struct any_of<meta::type_map<meta::value_type_pair<Ids, Types>...>> {
+private:
+	using size = uint16_t;
+	using map_types = meta::type_map<meta::value_type_pair<Ids, Types>...>;
+	using map_ids = typename map_types::reverse;
+	using types = typename map_types::types;
+	static constexpr auto invalid_id = meta::max_value<size, Ids...>::value + 1;
+	static_assert(invalid_id != 0, "invalid_id wrapped around. Consider increasing size ");
+public:
+	any_of() = default;
+
+	template<typename T>
+	any_of(T&& v)
+	{
+		static_assert(types::template has_type<T>, "Type not part of this any_of");
+		auto target = reinterpret_cast<T*>(space);
+		*target = v;
+		id = map_ids::template at<T>;
+	}
+
+	template<typename T, typename... Args>
+	void store(Args&&... args)
+	{
+		static_assert(types::template has_type<T>, "Type not part of this any_of");
+		new (space) T{std::forward<Args>(args)...};
+		id = map_ids::template at<T>;
+	}
+
+	template<class Visitor>
+	void accept(Visitor&& v)
+	{
+		(try_dispatch<Types, Visitor>(v) || ...);
+	}
+
+private:
+	union {
+		char space[types::template max<meta::size_of>::value];
+		typename types::template max<meta::align_of>::type alignment;
+	};
+	size id = invalid_id;
+
+	template<typename T, class Visitor>
+	bool try_dispatch(Visitor&& v)
+	{
+		if (id == map_ids::template at<T>) {
+			auto t = reinterpret_cast<const T&>(*space);
+			v.visit(t);
+			return true;
+		}
+		return false;
+	}
+};
+
 namespace details {
 template<typename T>
 struct queue_concept {

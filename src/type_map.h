@@ -28,6 +28,7 @@ template<size_t... Ks, typename... Ts>
 struct type_map<value_type_pair<Ks, Ts>...> {
 	using reverse = type_map<type_value_pair<Ts, Ks>...>;
 	using keys = type_list<value_to_type<Ks>...>;
+	using types = type_list<Ts...>;
 private:
 	using items = type_list<value_type_pair<Ks, Ts>...>;
 	static_assert(keys::is_unique, "List of keys should be unique");

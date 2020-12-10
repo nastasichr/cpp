@@ -16,6 +16,21 @@ struct make_unique_id {
 template<typename T>
 constexpr auto make_unique_id = (&details::make_unique_id<T>::identity);
 
+template<typename T, T... Values>
+struct max_value {
+	static_assert(sizeof...(Values) > 0, "max_value requies a list of values");
+};
+
+template<typename T, T Found>
+struct max_value<T, Found> {
+	static constexpr T value = Found;
+};
+
+template<typename T, T V1, T V2, T... Others>
+struct max_value<T, V1, V2, Others...> {
+	static constexpr auto largest = (V1 > V2) ? V1 : V2;
+	static constexpr auto value = max_value<T, largest, Others...>::value;
+};
 
 template<template<typename> class Norm, typename... Ts>
 struct max {

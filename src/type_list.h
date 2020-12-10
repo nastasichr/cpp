@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <type_traits>
+#include "type_manip.h"
 
 namespace meta {
 
@@ -108,6 +109,9 @@ public:
 
 	template<size_t pos>
 	using at = typename decltype(safe_type_at<pos>())::type;
+
+	template<template<typename>class Norm>
+	using max = meta::max<Norm, Ts...>;
 
 	template<template<typename...> class F>
 	static constexpr auto for_each()
