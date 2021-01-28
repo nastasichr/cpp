@@ -13,11 +13,6 @@ TEST(index_pre_increment)
 	ASSERT((int)++idx == 1);
 	ASSERT((int)++idx == 2);
 	ASSERT((int)++idx == 0);
-
-	LOGGER << PRINT((int)++idx) << std::endl;
-	LOGGER << PRINT((int)++idx) << std::endl;
-	LOGGER << PRINT((int)++idx) << std::endl;
-	LOGGER << PRINT((int)++idx) << std::endl;
 }
 
 TEST(index_post_increment)
@@ -30,11 +25,44 @@ TEST(index_post_increment)
 	ASSERT((int)idx++ == 0);
 	ASSERT((int)idx++ == 1);
 	ASSERT((int)idx++ == 2);
+}
 
-	LOGGER << PRINT((int)idx++) << std::endl;
-	LOGGER << PRINT((int)idx++) << std::endl;
-	LOGGER << PRINT((int)idx++) << std::endl;
-	LOGGER << PRINT((int)idx++) << std::endl;
+TEST(index_plus)
+{
+	ring::index idx{10};
+
+	ASSERT((int)(idx + 4) == 4);
+	ASSERT((int)(idx + 8) == 8);
+	ASSERT((int)(idx + 12) == 2);
+}
+
+TEST(vector_at_init)
+{
+	int data[3] = {22, 33, 198};
+	ring::vector<int> v{data, 3};
+
+	ASSERT(v[0] == data[0]);
+	ASSERT(v[1] == data[1]);
+	ASSERT(v[2] == data[2]);
+	ASSERT(v[3] == data[0]);
+	ASSERT(v[4] == data[1]);
+	ASSERT(v[5] == data[2]);
+}
+
+TEST(vector_right_rotate)
+{
+	int data[3] = {22, 33, 198};
+	ring::vector<int> v{data, 3};
+
+	ASSERT(v[0] == data[0]);
+	v >> 1;
+	ASSERT(v[0] == data[1]);
+	v >> 1;
+	ASSERT(v[0] == data[2]);
+	v >> 1;
+	ASSERT(v[0] == data[0]);
+	v >> 2;
+	ASSERT(v[0] == data[2]);
 }
 
 int main()

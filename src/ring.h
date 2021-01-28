@@ -6,27 +6,51 @@ namespace ring {
 
 template<typename Size = size_t>
 struct index {
-	index(Size s, Size p) : size{s}, position{p} {}
-	index(Size s) : index{s, 0} {}
-	index& operator++()
+	constexpr index(Size s, Size p) noexcept : size{s}, position{p} {}
+	constexpr index(Size s) noexcept : index{s, 0} {}
+	constexpr index operator+(Size n) noexcept
 	{
-		position = (position + 1) % size;
+		return {size, (position + n) % size};
+	}
+	constexpr index& operator+=(Size n) noexcept
+	{
+		position = (position + n) % size;
 		return *this;
 	}
-	index  operator++(int)
+	constexpr index& operator++() noexcept
+	{
+		return (*this) += 1;
+	}
+	constexpr index operator++(int) noexcept
 	{
 		index before = *this;
 		++(*this);
 		return before;
 	}
-
-	explicit operator Size()
+	constexpr explicit operator Size() const noexcept
 	{
 		return position;
 	}
 private:
 	const Size size;
 	Size position;
+};
+
+template<typename T, typename Size = size_t>
+struct vector {
+	constexpr vector(T* b, Size s) noexcept : index{s}, base{b} {}
+	constexpr T& operator[](Size p) noexcept
+	{
+		return base[(Size)(index + p)];
+	}
+	constexpr vector& operator>>(Size n) noexcept
+	{
+		index += n;
+		return *this;
+	}
+private:
+	index<Size> index;
+	T* const base;
 };
 
 }}
