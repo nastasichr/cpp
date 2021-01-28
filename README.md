@@ -23,6 +23,7 @@ These are some helpers defined in this project that might come in handy:
 - `sized_function<size, R(Args..)>` : alternative to std::function backed by fixed-size static storage;
 - `type_string<char...>` : compile-time value-list and string in the form of template non-type parameters, allowing pure compile-time computation;
 - `any_of<T...>` : type erasure similar to std::variant to allow easy type-based publish-subscriber patterns;
+- `ring::vector<T>` : circular random-access container;
 
 ## Performance
 

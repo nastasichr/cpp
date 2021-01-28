@@ -38,18 +38,18 @@ private:
 
 template<typename T, typename Size = size_t>
 struct vector {
-	constexpr vector(T* b, Size s) noexcept : index{s}, base{b} {}
+	constexpr vector(T* b, Size s) noexcept : front{s}, base{b} {}
 	constexpr T& operator[](Size p) noexcept
 	{
-		return base[(Size)(index + p)];
+		return base[(Size)(front + p)];
 	}
 	constexpr vector& operator>>(Size n) noexcept
 	{
-		index += n;
+		front += n;
 		return *this;
 	}
 private:
-	index<Size> index;
+	index<Size> front;
 	T* const base;
 };
 
